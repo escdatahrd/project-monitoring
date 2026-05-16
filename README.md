@@ -1,37 +1,28 @@
-# README - Setup Dashboard Baru
+# README - Setup Dashboard Proyek Baru
 
-Tujuan dokumen ini: panduan singkat untuk menyiapkan 1 dashboard baru dengan database, link, Apps Script, dan Google Drive yang terpisah.
+Dokumen ini menjelaskan langkah-langkah untuk menyiapkan dashboard untuk proyek baru.
 
-## Konsep Singkat
+**Konsep utama:**
 
-```
-1 proyek = 1 Firebase Project + 1 Firestore Database + 1 Hosting URL + 1 Apps Script + 1 Google Drive Folder
-```
-
-Source code dashboard boleh dicopy dari template lama, tetapi Firebase config dan Project Setup harus diganti untuk proyek baru.
-
----
-
-## 1. Yang Perlu Disiapkan
-
-- Akun Gmail owner/admin Firebase.
-- Source code dashboard terbaru.
-- Node.js LTS dan Firebase CLI di 1 device teknis saja.
-- Google Drive folder proyek baru.
-- Apps Script template lama yang sudah berjalan.
-- Email admin pertama untuk proyek baru.
-
-User biasa tidak perlu Node.js, npm, atau Firebase CLI. Mereka hanya perlu browser dan link dashboard.
+- 1 proyek = 1 Firebase project, 1 database, 1 link dashboard, 1 Apps Script, dan 1 struktur Google Drive.
+- Source code dashboard boleh dicopy dari template lama.
+- Nama Firebase project bebas mengikuti nama proyek yang sedang dijalankan. Contoh: `dashboard-rs-manado-2026`, `dashboard-gedung-abc`, atau nama lain yang mudah dikenali.
+- Setelah website berhasil dideploy, pengaturan Drive dan Apps Script dilakukan dari halaman **Project Setup** di website.
 
 ---
 
-## 2. Install di Device Teknis
+## 1. Siapkan 1 Device Teknis
 
-### Windows
+Device teknis hanya dipakai untuk deploy/update website. User biasa tidak perlu install apa pun.
 
-Install Node.js LTS dari website resmi Node.js.
+Install:
 
-Cek di PowerShell:
+1. Node.js LTS
+2. Firebase CLI
+3. Browser Chrome/Edge
+4. Source code dashboard terbaru
+
+Cek Node.js dan npm:
 
 ```powershell
 node -v
@@ -43,294 +34,285 @@ Install Firebase CLI:
 ```powershell
 npm install -g firebase-tools
 firebase --version
+```
+
+Login Firebase:
+
+```powershell
 firebase login
 firebase projects:list
 ```
 
-Login dengan Gmail yang punya akses ke Firebase project.
+---
+
+## 2. Buat Firebase Project Baru
+
+Di Firebase Console, klik **Add project**.
+
+Nama project bebas mengikuti nama proyek yang dikerjakan. Gunakan nama yang jelas, misalnya:
+
+```txt
+dashboard-nama-proyek
+dashboard-nama-client-2026
+dashboard-rkm-nama-proyek
+```
+
+Setelah project dibuat, aktifkan layanan berikut:
+
+1. **Authentication** - pilih Email/Password.
+2. **Firestore Database** - pilih region `asia-southeast1`.
+3. **Hosting** - untuk link website dashboard.
 
 ---
 
-## 3. Buat Firebase Project Baru
+## 3. Daftarkan Web App
 
 Di Firebase Console:
 
-1. Klik Add project.
-2. Buat nama project, contoh: `project-web-002`.
-3. Masuk ke project baru.
-4. Add app -> pilih Web `</>`.
-5. Copy Firebase config.
+```txt
+Project Overview -> Add app -> Web
+```
 
-Aktifkan layanan:
+Isi nickname bebas, misalnya:
 
-- Authentication -> Sign-in method -> Email/Password -> Enable.
-- Firestore Database -> Create database -> Production mode -> region `asia-southeast1`.
-- Hosting akan dipakai lewat Firebase CLI.
+```txt
+Dashboard Web App
+```
+
+Firebase akan memberikan `firebaseConfig`.
+
+Copy config tersebut, lalu ganti isi config lama di file:
+
+```txt
+public/firebase-config.js
+```
+
+Yang diganti hanya bagian:
+
+```js
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "...",
+};
+```
+
+Bagian export di bawahnya jangan dihapus.
 
 ---
 
-## 4. Update Source Code
+## 4. Hubungkan Folder Source Code ke Firebase Project
 
-Pastikan struktur folder seperti ini:
+Buka file:
 
-```
-dashboard-project/
-├─ firebase.json
-├─ .firebaserc
-├─ firestore.rules
-├─ firestore.indexes.json
-└─ public/
-   ├─ index.html
-   ├─ dashboard.html
-   ├─ documents.html
-   ├─ setup.html
-   ├─ users.html
-   ├─ firebase-config.js
-   ├─ ui.css
-   └─ 404.html
+```txt
+.firebaserc
 ```
 
-### Update `public/firebase-config.js`
-
-Ganti config lama dengan config dari Firebase project baru.
-
-Pastikan `projectId` sudah benar, contoh:
-
-```js
-projectId: "project-web-002"
-```
-
-Jangan hapus bagian export:
-
-```js
-export { app, auth, db, firebaseConfig };
-```
-
-### Update `.firebaserc`
-
-Isi dengan project ID baru:
+Isi dengan Firebase Project ID yang baru dibuat:
 
 ```json
 {
   "projects": {
-    "default": "project-web-002"
+    "default": "ISI_DENGAN_FIREBASE_PROJECT_ID"
   }
 }
 ```
 
+Contoh Project ID harus menyesuaikan project yang dibuat klien. Jangan wajib memakai nama contoh tertentu.
+
 ---
 
-## 5. Inisialisasi Firebase CLI
+## 5. Deploy Website dan Rules
 
-Kalau folder sudah punya `firebase.json`, `.firebaserc`, dan `firestore.rules`, biasanya tidak perlu `firebase init` lagi.
+Buka terminal di folder source code dashboard.
 
-Cukup jalankan:
+Pastikan folder memiliki struktur seperti ini:
 
-```powershell
-firebase use project-web-002
+```txt
+firebase.json
+.firebaserc
+firestore.rules
+firestore.indexes.json
+public/
 ```
 
-Kalau tetap perlu `firebase init`, pilih hanya:
-
-- Firestore
-- Hosting
-
-Jawaban penting:
-
-- Public directory: `public`
-- Single-page app rewrite: `No`
-- GitHub automatic deploy: `No`
-- Kalau diminta overwrite file lama: pilih `No`
-
-Jangan pilih:
-
-- App Hosting
-- Functions
-- SQL Connect
-- Genkit
-- AI Logic
-- Realtime Database
-
----
-
-## 6. Deploy Website dan Rules
-
-Jalankan dari folder project:
+Jalankan:
 
 ```powershell
+firebase use ISI_DENGAN_FIREBASE_PROJECT_ID
 firebase deploy --only hosting,firestore:rules
 ```
 
-Setelah berhasil, Firebase akan memberi link seperti:
+Setelah berhasil, Firebase akan menampilkan link website, misalnya:
 
+```txt
+https://nama-project.web.app
 ```
-https://project-web-002.web.app
-```
+
+Link ini adalah link dashboard untuk proyek tersebut.
 
 ---
 
-## 7. Buat Admin Pertama
+## 6. Buat Admin Pertama
 
-Admin pertama harus dibuat manual 1 kali di Firebase Console.
+Admin pertama harus dibuat sekali dari Firebase Console. Setelah itu, admin bisa membuat user lain dari website.
 
 ### A. Buat user login
 
-Firebase Console -> Authentication -> Users -> Add user.
+Firebase Console:
 
-Contoh:
-
-```
-Email: admin@client.com
-Password: password sementara
+```txt
+Authentication -> Users -> Add user
 ```
 
-Copy UID user tersebut.
+Isi email dan password awal.
 
-### B. Buat role admin di Firestore
+Setelah user dibuat, copy **UID** user tersebut.
 
-Firestore Database -> Data -> Start collection.
+### B. Buat data role admin
+
+Firebase Console:
+
+```txt
+Firestore Database -> Data -> Start collection
+```
 
 Collection ID:
 
-```
+```txt
 users
 ```
 
-Document ID: paste UID dari Authentication.
+Document ID:
 
-Fields:
+```txt
+PASTE_UID_DARI_AUTHENTICATION
+```
 
-| Field | Type | Value |
-|---|---|---|
-| name | string | Client Admin |
-| email | string | admin@client.com |
-| role | string | admin |
-| active | boolean | true |
-| status | string | active |
+Isi field berikut:
 
-Catatan: `active` harus boolean `true`, bukan string `"true"`.
+| Field    | Type    | Value       |
+| -------- | ------- | ----------- |
+| `name`   | string  | Nama Admin  |
+| `email`  | string  | email admin |
+| `role`   | string  | admin       |
+| `active` | boolean | true        |
+| `status` | string  | active      |
 
-Setelah admin pertama berhasil login, user berikutnya bisa dibuat dari halaman User Management di website.
+Catatan: field `active` harus type **boolean**, bukan string.
 
 ---
 
-## 8. Setup Apps Script dan Google Drive
+## 7. Apps Script dan Google Drive
 
-### Google Drive
+Untuk setiap proyek, siapkan:
 
-Buat folder proyek baru, contoh:
+1. Google Drive folder proyek.
+2. Copy Apps Script template lama.
+3. Deploy Apps Script sebagai Web App.
+4. Copy Apps Script Web App URL.
 
-```
-Project Name - Dashboard Drive
-├─ 01_RKM
-├─ 02_Administrasi
-├─ 03_Uji_Mutu
-├─ 04_Checklist_Bangunan_Gedung
-├─ 05_Material_Approval
-├─ 06_Shop_Drawing
-├─ 07_RFI
-├─ 08_MC-0
-├─ 09_Addendum
-├─ 10_TKDN
-├─ 11_HSE_K3
-├─ 12_Evaluasi_Kinerja
-├─ Media
-│  ├─ Foto
-│  ├─ Video
-│  └─ SketchUp_3D
-└─ Surat
-   ├─ Surat_Masuk
-   └─ Surat_Keluar
+Contoh struktur Drive:
+
+```txt
+Project Drive
+├─ RKM
+├─ Administrasi
+├─ Uji Mutu
+├─ Shop Drawing
+├─ RFI
+├─ HSE/K3
+├─ Media Foto
+├─ Media Video
+├─ SketchUp / 3D
+├─ Surat Masuk
+└─ Surat Keluar
 ```
 
-### Apps Script
-
-1. Copy Apps Script template lama.
-2. Deploy -> New deployment -> Web app.
-3. Execute as: Me.
-4. Who has access: Anyone with the link.
-5. Copy Web App URL.
-
-Folder Drive tidak perlu diedit manual di code jika setup dilakukan dari halaman Project Setup.
+Folder boleh disesuaikan dengan kebutuhan proyek.
 
 ---
 
-## 9. Setup dari Website
+## 8. Setup dari Website
 
-Login ke dashboard sebagai admin.
+Setelah website sudah bisa dibuka, login sebagai admin.
 
 Buka:
 
-```
+```txt
 Project Setup
 ```
 
 Isi:
 
-- Project ID
-- Project Name
-- Apps Script Web App URL
-- Folder Foto
-- Folder Video
-- Folder SketchUp / 3D
-- Folder RKM
-- Folder kategori dokumen
-- Folder Surat Masuk
-- Folder Surat Keluar
+1. Project ID
+2. Nama Project
+3. Apps Script Web App URL
+4. Folder Foto
+5. Folder Video
+6. Folder SketchUp / 3D
+7. Folder RKM
+8. Kategori dokumen dan folder Drive masing-masing
+9. Folder Surat Masuk
+10. Folder Surat Keluar
 
-Lalu klik:
+Klik:
 
-1. Test Folder
-2. Simpan Setup
-
-Setelah itu buka halaman Dokumen dan klik:
-
+```txt
+Test Folder
 ```
-Refresh Drive
+
+Jika sudah benar, klik:
+
+```txt
+Simpan Setup
+```
+
+Setelah itu buka halaman **Dokumen**, lalu klik **Refresh Drive**.
+
+---
+
+## 9. Tambah User Lain dari Website
+
+Setelah admin pertama berhasil login, user berikutnya bisa dibuat dari website:
+
+```txt
+User Management -> Tambah User
+```
+
+Role yang tersedia:
+
+- `admin` - akses penuh
+- `viewer` - lihat data saja
+- `contractor` - akses tim kontraktor
+
+---
+
+## Ringkasan Cepat
+
+```txt
+1. Install Node.js + Firebase CLI di 1 device teknis.
+2. Buat Firebase project baru sesuai nama proyek.
+3. Aktifkan Authentication, Firestore, dan Hosting.
+4. Daftarkan Web App dan copy firebaseConfig.
+5. Update public/firebase-config.js.
+6. Update .firebaserc dengan Project ID baru.
+7. Deploy hosting dan firestore rules.
+8. Buat admin pertama di Authentication dan Firestore.
+9. Deploy/copy Apps Script template.
+10. Login ke website dan isi Project Setup.
+11. Tambah user lain dari User Management.
 ```
 
 ---
 
-## 10. Checklist Validasi
+## Catatan Penting
 
-Sebelum handover, pastikan:
-
-- Login admin berhasil.
-- Menu User Management dan Project Setup muncul.
-- Project Setup bisa Test Folder dan Simpan Setup.
-- Dokumen bisa Refresh Drive.
-- Dashboard terbuka tanpa error permission.
-- Executive Summary bisa disimpan.
-- S-Curve bisa input/upload.
-- Checklist bisa digunakan.
-- Arsip Mingguan bisa dibuka.
-- User viewer bisa login dan tidak melihat tombol admin.
-
-Console browser tidak boleh ada error:
-
-```
-FirebaseError: Missing or insufficient permissions
-```
-
-Warning Tailwind CDN atau log SketchUp/Trimble masih boleh selama fitur terlihat berjalan.
-
----
-
-## Ringkasan Paling Pendek
-
-Untuk proyek baru:
-
-1. Buat Firebase project baru.
-2. Enable Authentication, Firestore, Hosting.
-3. Copy source code dashboard.
-4. Ganti `firebase-config.js`.
-5. Ganti `.firebaserc`.
-6. Deploy `hosting` dan `firestore:rules`.
-7. Buat admin pertama manual di Firebase.
-8. Copy dan deploy Apps Script.
-9. Login ke website.
-10. Isi Project Setup.
-11. Test Folder dan Simpan Setup.
-12. Refresh Drive.
-13. Test admin dan viewer.
-14. Handover link dashboard ke client.
+- User biasa hanya membutuhkan link dashboard dan akun login.
+- Node.js, npm, dan Firebase CLI hanya dibutuhkan di device teknis untuk deploy.
+- Klien boleh menamai Firebase project sesuai nama proyek yang sedang dikerjakan.
+- Untuk kebutuhan audit, setiap proyek sebaiknya punya Firebase project, database, Hosting URL, Apps Script, dan Drive folder masing-masing.
