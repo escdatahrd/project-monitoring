@@ -1,0 +1,2018 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manajemen Dokumen & Surat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .nav-item.active {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border-right: 3px solid #2563eb;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+        height: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .progress-bar {
+        transition: width 1s ease-in-out;
+      }
+
+      /* ==========================
+         UI IMPROVEMENT: TABLE SURAT
+         ========================== */
+      .mail-table-wrap {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+      }
+      .mail-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 1180px;
+      }
+      .mail-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(238, 242, 255, 0.98);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .mail-table th {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #312e81;
+        padding: 16px 16px;
+        white-space: nowrap;
+      }
+      .mail-table td {
+        padding: 16px 16px;
+        vertical-align: top;
+        border-bottom: 1px solid #f1f5f9;
+        color: #0f172a;
+      }
+      .mail-table tbody tr:nth-child(even) td {
+        background: #fbfdff;
+      }
+      .mail-table tbody tr:hover td {
+        background: rgba(99, 102, 241, 0.06);
+      }
+      .mail-mono {
+        font-variant-numeric: tabular-nums;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .mail-muted {
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .mail-title {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+      .mail-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .mail-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .mail-btn-open {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 800;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        color: #4338ca;
+        background: #ffffff;
+        transition: all 0.15s ease;
+      }
+      .mail-btn-open:hover {
+        background: rgba(99, 102, 241, 0.08);
+        border-color: rgba(99, 102, 241, 0.55);
+      }
+      .mail-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid rgba(226, 232, 240, 1);
+        background: rgba(248, 250, 252, 1);
+        color: #334155;
+        white-space: nowrap;
+      }
+
+
+      /* ==========================
+         DOCUMENT CARDS - latest pre-dynamic design
+         Card click = filter table. Folder button = clear full-width CTA.
+         ========================== */
+      .doc-category-card {
+        display: flex !important;
+        flex-direction: column;
+        min-height: 152px;
+      }
+      .doc-category-card h4 {
+        padding-right: 0 !important;
+      }
+      .doc-category-card > a[title="Buka Folder"],
+      .doc-category-card .doc-folder-button {
+        position: static !important;
+        order: 10;
+        margin-top: 16px;
+        width: 100%;
+        min-height: 40px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 900;
+        color: #ffffff !important;
+        background: linear-gradient(135deg, var(--doc-accent, #2563eb), var(--doc-accent-2, #4f46e5)) !important;
+        border: 1px solid rgb(var(--doc-rgb, 37 99 235) / 0.22) !important;
+        box-shadow: 0 10px 22px rgb(var(--doc-rgb, 37 99 235) / 0.18) !important;
+        letter-spacing: -0.01em;
+      }
+      .doc-category-card > a[title="Buka Folder"]:hover,
+      .doc-category-card .doc-folder-button:hover {
+        filter: saturate(1.05) brightness(1.03);
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgb(var(--doc-rgb, 37 99 235) / 0.24) !important;
+      }
+      .doc-category-card > a[title="Buka Folder"]:active,
+      .doc-category-card .doc-folder-button:active {
+        transform: translateY(0);
+      }
+
+      .archive-table-wrap {
+        border-radius: 16px;
+        overflow: hidden;
+        border-top: 1px solid #e2e8f0;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+      }
+      .archive-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 760px;
+      }
+      .archive-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(248, 250, 252, 0.98);
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .archive-table th {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #64748b;
+        padding: 16px 20px;
+        white-space: nowrap;
+      }
+      .archive-table td {
+        padding: 18px 20px;
+        vertical-align: top;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .archive-table tbody tr:hover td {
+        background: rgba(37, 99, 235, 0.04);
+      }
+      .archive-title {
+        font-size: 14px;
+        line-height: 1.4;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .archive-submeta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .archive-source-chip,
+      .archive-category-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .archive-source-chip {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+      }
+      .archive-source-chip.manual {
+        background: #f8fafc;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+      }
+      .archive-category-chip {
+        background: #eef2ff;
+        color: #4338ca;
+        border: 1px solid #c7d2fe;
+      }
+      .archive-date {
+        font-size: 12px;
+        line-height: 1.45;
+        color: #475569;
+        font-variant-numeric: tabular-nums;
+      }
+      .archive-actions,
+      .mail-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .archive-btn,
+      .mail-btn-delete {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 800;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+      .archive-btn-primary {
+        background: #0f172a;
+        color: #ffffff;
+        border: 1px solid #0f172a;
+      }
+      .archive-btn-primary:hover {
+        background: #1e293b;
+        border-color: #1e293b;
+      }
+      .archive-btn-danger,
+      .mail-btn-delete {
+        background: #fff1f2;
+        color: #e11d48;
+        border: 1px solid #fecdd3;
+      }
+      .archive-btn-danger:hover,
+      .mail-btn-delete:hover {
+        background: #ffe4e6;
+      }
+      .table-empty {
+        padding: 32px 16px !important;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+      }
+      .mail-table.responsive-table {
+        min-width: 1180px;
+      }
+      .mail-cell-title .mail-title {
+        font-size: 13px;
+      }
+      .mail-actions-cell,
+      .archive-actions-cell {
+        min-width: 154px;
+      }
+      .section-responsive-tools {
+        width: 100%;
+      }
+      .section-responsive-tools > * {
+        min-width: 0;
+      }
+      @media (max-width: 1024px) {
+        .archive-table th,
+        .archive-table td,
+        .mail-table th,
+        .mail-table td {
+          padding: 14px 16px;
+        }
+      }
+      @media (max-width: 768px) {
+        .responsive-table {
+          min-width: 0 !important;
+          border-collapse: separate;
+          border-spacing: 0 12px;
+        }
+        .responsive-table thead {
+          display: none;
+        }
+        .responsive-table,
+        .responsive-table tbody,
+        .responsive-table tr,
+        .responsive-table td {
+          display: block;
+          width: 100%;
+        }
+        .responsive-table tbody {
+          padding: 12px;
+        }
+        .responsive-table tr {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+          margin-bottom: 12px;
+        }
+        .responsive-table td {
+          border-bottom: 1px solid #f1f5f9;
+          padding: 12px 14px !important;
+          text-align: left !important;
+        }
+        .responsive-table td:last-child {
+          border-bottom: 0;
+        }
+        .responsive-table td::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          font-weight: 800;
+          color: #94a3b8;
+          margin-bottom: 6px;
+        }
+        .responsive-table td[data-label='Aksi']::before,
+        .responsive-table td[data-label='File']::before {
+          margin-bottom: 10px;
+        }
+        .archive-actions,
+        .mail-actions {
+          justify-content: flex-start;
+        }
+        .archive-btn,
+        .mail-btn-open,
+        .mail-btn-delete {
+          flex: 0 0 auto;
+        }
+      }
+
+    </style>
+    <link rel="stylesheet" href="ui.css?v=8" />
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div
+      id="sidebarOverlay"
+      onclick="toggleSidebar()"
+      class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"
+    ></div>
+
+    <div class="flex h-screen overflow-hidden">
+      <aside
+        id="sidebar"
+        class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col rounded-none"
+      >
+        <div
+          class="h-16 flex items-center justify-between px-6 border-b border-slate-100"
+        >
+          <div class="flex items-center">
+            <div
+              class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg"
+            >
+              <i class="fas fa-building"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-slate-800"
+              >Proyek<span class="text-blue-600">App</span></span
+            >
+          </div>
+          <button
+            onclick="toggleSidebar()"
+            class="lg:hidden text-slate-400 hover:text-red-500"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <nav
+          class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar"
+        >
+          <p
+            class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2"
+          >
+            Main Menu
+          </p>
+          <a
+            href="dashboard.html"
+            class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <i class="fas fa-th-large w-6 text-center mr-2"></i> Dashboard
+          </a>
+          <a
+            href="documents.html"
+            class="nav-item active flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <i class="fas fa-folder-open w-6 text-center mr-2"></i> Dokumen
+          </a>
+          <div id="adminMenu" class="hidden mt-6">
+            <p
+              class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6"
+            >
+              Admin Console
+            </p>
+            <a
+              href="users.html"
+              class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              <i class="fas fa-users-cog w-6 text-center mr-2"></i> User
+              Management
+            </a>
+            <a
+              href="setup.html"
+              class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              <i class="fas fa-sliders w-6 text-center mr-2"></i> Project Setup
+            </a>
+          </div>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-slate-200"
+            >
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p
+                id="userEmail"
+                class="text-sm font-medium text-slate-900 truncate"
+              >
+                Loading...
+              </p>
+              <p id="userRole" class="text-xs text-slate-500 truncate">...</p>
+            </div>
+            <button
+              id="logoutBtn"
+              class="text-slate-400 hover:text-red-600 transition"
+              title="Logout"
+            >
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <div
+        class="flex-1 flex flex-col lg:ml-64 overflow-hidden transition-all duration-300"
+      >
+        <header
+          class="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-4 lg:px-8 shadow-sm rounded-none"
+        >
+          <div class="flex items-center gap-4">
+            <button
+              onclick="toggleSidebar()"
+              class="lg:hidden text-slate-500 hover:text-blue-600 p-2"
+            >
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+            <div class="flex items-center text-sm text-slate-500">
+              <span class="hidden md:inline hover:text-blue-600 cursor-pointer"
+                >Portal</span
+              >
+              <i class="fas fa-chevron-right text-xs mx-2 hidden md:inline"></i>
+              <span class="font-bold text-slate-800">Manajemen Dokumen</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              onclick="syncDrive()"
+              id="btnSync"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2 transition"
+              title="Refresh data dokumen dari Google Drive"
+            >
+              <i class="fas fa-sync-alt"></i>
+              <span id="btnSyncLabel" class="hidden md:inline">Refresh Drive</span>
+            </button>
+          </div>
+        </header>
+
+        <main
+          id="mainContent"
+          class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 lg:p-8 space-y-8"
+        >
+          <div
+            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group fade-in flex flex-col md:flex-row relative"
+          >
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600"></div>
+            <div
+              class="w-full md:w-80 h-48 bg-slate-100 relative border-r border-slate-100"
+            >
+              <iframe
+                id="konFrame"
+                class="w-full h-full hidden"
+                src=""
+                frameborder="0"
+              ></iframe>
+              <div
+                id="konPlaceholder"
+                class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs"
+              >
+                <i
+                  class="fas fa-spinner fa-spin text-2xl mb-2 text-indigo-400"
+                ></i>
+                Syncing...
+              </div>
+            </div>
+            <div class="flex-1 p-6 flex flex-col justify-center">
+              <div class="flex justify-between items-start gap-4">
+                <div>
+                  <span
+                    class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider border border-indigo-100"
+                    >newest preview</span
+                  >
+                  <h2 class="text-lg font-bold text-slate-800 mt-2">
+                    Rapat Kerja Mingguan (RKM)
+                  </h2>
+                  <p
+                    id="konDate"
+                    class="text-sm text-slate-500 mt-1 flex items-center gap-2"
+                  >
+                    <i class="far fa-clock"></i> Menunggu data...
+                  </p>
+                </div>
+
+                <div class="hidden md:flex items-center gap-2">
+                  <a
+                    id="rkmFolderLink"
+                    data-folder-category="RKM"
+                    href="https://drive.google.com/drive/folders/1kelZSuQhXbIzVL_BiZAUMswgsrud2Aih"
+                    target="_blank"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2"
+                    title="Buka Folder RKM"
+                  >
+                    <i class="fas fa-folder-open"></i> Buka Folder RKM
+                  </a>
+
+                  <a
+                    id="konLink"
+                    href="#"
+                    target="_blank"
+                    class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2"
+                    title="Buka File Terbaru"
+                  >
+                    <i class="fas fa-file-pdf"></i> Buka File Terbaru
+                  </a>
+                </div>
+              </div>
+
+              <div class="md:hidden mt-4 flex gap-2">
+                <a
+                  id="rkmFolderLinkMobile"
+                  data-folder-category="RKM"
+                    href="https://drive.google.com/drive/folders/1kelZSuQhXbIzVL_BiZAUMswgsrud2Aih"
+                  target="_blank"
+                  class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                >
+                  <i class="fas fa-folder-open"></i> Folder
+                </a>
+                <a
+                  id="konLinkMobile"
+                  href="#"
+                  target="_blank"
+                  class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                >
+                  <i class="fas fa-file-pdf"></i> File
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden fade-in"
+          >
+            <div
+              class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+            >
+              <div>
+                <h3
+                  class="font-bold text-lg text-slate-800 flex items-center gap-2"
+                >
+                  <i class="fas fa-folder-tree text-blue-500"></i>
+                  Kategori Dokumen
+                </h3>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                  >Status</span
+                >
+                <span
+                  class="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full"
+                >
+                  Dynamic Setup
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div
+                id="documentCategoryGrid"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              >
+                <div class="col-span-full p-8 text-center text-slate-400 text-sm">
+                  <i class="fas fa-circle-notch fa-spin mr-2"></i> Memuat kategori dokumen...
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            id="arsipSection"
+            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden scroll-mt-20"
+          >
+            <div
+              class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4"
+            >
+              <div class="flex items-center gap-3">
+                <h3 class="font-bold text-lg text-slate-800">Arsip Dokumen</h3>
+                <div id="filterBadgeContainer"></div>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 w-full md:w-auto section-responsive-tools">
+                <button
+                  onclick="window.openModal('dokumen')"
+                  data-admin-only="true"
+                  class="hidden text-xs text-blue-600 font-bold border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded transition whitespace-nowrap"
+                >
+                  <i class="fas fa-plus mr-1"></i> Input Manual
+                </button>
+                <button
+                  onclick="window.resetFilter()"
+                  class="text-xs text-red-500 font-bold hover:bg-red-50 px-3 py-2 rounded border border-transparent hover:border-red-100 transition whitespace-nowrap"
+                >
+                  <i class="fas fa-sync-alt mr-1"></i> Reset
+                </button>
+                <div class="relative w-full md:w-64">
+                  <i
+                    class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"
+                  ></i>
+                  <input
+                    type="text"
+                    id="searchInp"
+                    placeholder="Cari dokumen..."
+                    class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none transition"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="archive-table-wrap">
+              <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-sm text-left archive-table responsive-table">
+                  <thead>
+                  <tr>
+                    <th class="px-6 py-4">Judul Dokumen</th>
+                    <th class="px-6 py-4">Kategori</th>
+                    <th class="px-6 py-4">Waktu Upload</th>
+                    <th class="px-6 py-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="docTableBody">
+                  <tr>
+                    <td colspan="4" class="p-8 text-center text-slate-400">
+                      Memuat data...
+                    </td>
+                  </tr>
+                </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-12">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+              <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div>
+                  <h2
+                    class="text-xl font-bold text-slate-800 flex items-center gap-2"
+                  >
+                    <i class="fas fa-mail-bulk text-indigo-500"></i> Register
+                    Surat
+                  </h2>
+                  <p class="text-sm text-slate-500">
+                    Log surat masuk dan keluar proyek.
+                  </p>
+                </div>
+                <div class="mail-header-actions">
+                  <button
+                    onclick="window.openModal('surat')"
+                    data-admin-only="true"
+                    class="hidden mail-action-primary"
+                  >
+                    <i class="fas fa-plus"></i> Input Link Surat
+                  </button>
+                  <a
+                    id="mailFolderInBtn"
+                    data-mail-folder="Surat Masuk"
+                    href="https://drive.google.com/drive/folders/1vq2Dym38HL1EeCb5iOwMvVd0uULbWu3h"
+                    target="_blank"
+                    class="mail-folder-btn mail-folder-in"
+                    title="Buka Folder Surat Masuk"
+                  >
+                    <i class="fas fa-inbox"></i> Surat Masuk
+                  </a>
+                  <a
+                    id="mailFolderOutBtn"
+                    data-mail-folder="Surat Keluar"
+                    href="https://drive.google.com/drive/folders/1n0YDLcd_wVe5eO6pKHKrYXskoX-u3e0s"
+                    target="_blank"
+                    class="mail-folder-btn mail-folder-out"
+                    title="Buka Folder Surat Keluar"
+                  >
+                    <i class="fas fa-paper-plane"></i> Surat Keluar
+                  </a>
+                </div>
+              </div>
+              <div class="flex gap-4 text-right hidden md:flex">
+                <div>
+                  <span class="block text-xs font-bold text-slate-400"
+                    >MASUK</span
+                  ><span
+                    id="countSuratMasuk"
+                    class="text-xl font-black text-indigo-600"
+                    >0</span
+                  >
+                </div>
+                <div>
+                  <span class="block text-xs font-bold text-slate-400"
+                    >KELUAR</span
+                  ><span
+                    id="countSuratKeluar"
+                    class="text-xl font-black text-pink-600"
+                    >0</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+              <div
+                class="p-5 border-b border-slate-100 flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center bg-indigo-50/30 rounded-t-xl"
+              >
+                <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                  <div
+                    class="flex items-center bg-white border border-slate-200 rounded-lg px-2 shadow-sm"
+                  >
+                    <span class="text-xs text-slate-400 mr-2"
+                      ><i class="far fa-calendar"></i
+                    ></span>
+                    <input
+                      type="date"
+                      id="filterMailStart"
+                      class="text-xs py-2 outline-none text-slate-600 w-28"
+                    />
+                    <span class="text-slate-300 mx-1">-</span>
+                    <input
+                      type="date"
+                      id="filterMailEnd"
+                      class="text-xs py-2 outline-none text-slate-600 w-28"
+                    />
+                  </div>
+                  <select
+                    id="filterMailType"
+                    class="bg-white border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-2 outline-none shadow-sm font-bold"
+                  >
+                    <option value="all">Semua Tipe</option>
+                    <option value="Surat Masuk">Surat Masuk</option>
+                    <option value="Surat Keluar">Surat Keluar</option>
+                  </select>
+                  <button
+                    onclick="filterMail()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition"
+                  >
+                    Search
+                  </button>
+                </div>
+                <div class="relative w-full lg:w-72">
+                  <i
+                    class="fas fa-search absolute left-3 top-3 text-indigo-300 text-xs"
+                  ></i>
+                  <input
+                    type="text"
+                    id="searchMail"
+                    placeholder="Cari perihal surat..."
+                    class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-indigo-100 rounded-lg focus:ring-2 focus:ring-indigo-200 outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <div class="mail-table-wrap">
+                <div class="overflow-x-auto custom-scrollbar">
+                  <table class="w-full text-left mail-table responsive-table">
+                    <thead>
+                      <tr>
+                        <th class="w-[60px]">No.</th>
+                        <th class="w-[140px]">Tanggal Surat</th>
+                        <th class="w-[140px]">Tipe</th>
+                        <th class="min-w-[320px]">Perihal / Judul Surat</th>
+                        <th class="min-w-[240px]">Asal Surat</th>
+                        <th class="w-[180px]">Tgl Surat Diterima</th>
+                        <th class="min-w-[240px]">Ket</th>
+                        <th class="w-[200px]">Waktu Upload</th>
+                        <th class="w-[170px] text-center">File</th>
+                      </tr>
+                    </thead>
+                    <tbody id="mailTableBody">
+                      <tr>
+                        <td colspan="9" class="p-8 text-center text-slate-400">
+                          Belum ada data surat.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div
+      id="addModal"
+      class="fixed inset-0 bg-black/60 hidden z-[60] flex items-center justify-center backdrop-blur-sm transition-opacity p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto overflow-hidden transform transition-all scale-100"
+      >
+        <div
+          class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center"
+        >
+          <h3 id="modalTitle" class="font-bold text-lg text-slate-800">
+            Input Data Baru
+          </h3>
+          <button
+            onclick="window.closeModal()"
+            class="text-slate-400 hover:text-red-500"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="addDocForm" class="p-6 space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+              >Judul / Perihal</label
+            >
+            <input
+              type="text"
+              id="inpTitle"
+              required
+              class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Kategori</label
+              >
+              <select
+                id="inpCategory"
+                class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+              ></select>
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Tanggal</label
+              >
+              <input
+                type="date"
+                id="inpDate"
+                required
+                class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div id="mailExtraFields" class="hidden space-y-3">
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Asal Surat</label
+              >
+              <input
+                type="text"
+                id="inpAsalSurat"
+                placeholder="Contoh: Konsultan / Owner / Vendor"
+                class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Tanggal Surat Diterima</label
+              >
+              <input
+                type="date"
+                id="inpTglDiterima"
+                class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                >Keterangan (Ket)</label
+              >
+              <input
+                type="text"
+                id="inpKet"
+                placeholder="Contoh: Perlu tindak lanjut / Sudah dibalas"
+                class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1"
+              >Link Google Drive (File)</label
+            >
+            <div class="relative">
+              <i
+                class="fab fa-google-drive absolute left-3 top-3 text-green-600 text-lg"
+              ></i>
+              <input
+                type="url"
+                id="inpUrl"
+                required
+                placeholder="https://drive.google.com/..."
+                class="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1 italic">
+              *Pastikan link drive sudah di-set "Anyone with the link can view"
+            </p>
+          </div>
+          <div class="pt-2">
+            <button
+              type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition"
+            >
+              Simpan Data
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module">
+      import {
+        collection,
+        addDoc,
+        getDocs,
+        query,
+        where,
+        doc,
+        deleteDoc,
+        getDoc,
+        updateDoc,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import {
+        onAuthStateChanged,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { auth, db } from "./firebase-config.js";
+
+      const DEFAULT_PROJECT_ID = "project_001";
+      const DEFAULT_APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbxovFmLB1tq-C9qvQvFS85lfO1nMby8fHxt5tc9U7eUVV8lDx5sDb4TTbMKCIXf0miGLg/exec";
+
+      let projectId = DEFAULT_PROJECT_ID;
+      let APPS_SCRIPT_URL = DEFAULT_APPS_SCRIPT_URL;
+      let projectSetup = null;
+      let allDocs = [];
+      let allMails = [];
+      let currentUserRole = "viewer";
+
+      function isAdminRole() {
+        return currentUserRole === "admin";
+      }
+
+      function applyRoleAccess() {
+        const isAdmin = isAdminRole();
+        document.querySelectorAll("[data-admin-only]").forEach((el) => {
+          el.classList.toggle("hidden", !isAdmin);
+          if ("disabled" in el) el.disabled = !isAdmin;
+          el.setAttribute("aria-hidden", isAdmin ? "false" : "true");
+        });
+
+        const syncLabel = document.getElementById("btnSyncLabel");
+        const syncBtn = document.getElementById("btnSync");
+        if (syncLabel) syncLabel.innerText = isAdmin ? "Refresh Drive" : "Refresh Tampilan";
+        if (syncBtn) {
+          syncBtn.title = isAdmin
+            ? "Sync file Google Drive ke database arsip"
+            : "Refresh tampilan dari Google Drive tanpa mengubah database";
+        }
+      }
+
+      const DEFAULT_DOCUMENT_CATEGORIES = [
+        { id: "rkm", name: "RKM", badge: "RKM", color: "indigo", active: true, order: 1, folderId: "1kelZSuQhXbIzVL_BiZAUMswgsrud2Aih" },
+        { id: "administrasi", name: "Administrasi", badge: "ADM", color: "blue", active: true, order: 2, folderId: "1xGlov1yA9BJ_FWHmFM9hR9SBjJutn6DF" },
+        { id: "uji-mutu", name: "Uji Mutu", badge: "LAB", color: "teal", active: true, order: 3, folderId: "1IgsL99oKaAzhUkQQza8Tlv6YyvGFeu4q" },
+        { id: "checklist-bangunan", name: "Checklist Bangunan Gedung", badge: "CHK", color: "slate", active: true, order: 4, folderId: "1huVf3wVUz5n6by9Ixs0gWYB0JTCLxBZF" },
+        { id: "material-approval", name: "Progress Material Approval", badge: "MAT", color: "orange", active: true, order: 5, folderId: "1brs9bWgUu9dN6EJCi2jjERISjnK-kD49" },
+        { id: "shop-drawing", name: "Progress Shop Drawing", badge: "DWG", color: "purple", active: true, order: 6, folderId: "1S0ZcnJUrXivP-KAWXkHSlBNLVAmcZoDm" },
+        { id: "rfi", name: "LIst & Status RFI", badge: "RFI", color: "indigo", active: true, order: 7, folderId: "1ZDYGEej8KBDOMFUn-KRH5uRysZY9oG3h" },
+        { id: "mc0", name: "Progress MC-0", badge: "MC", color: "emerald", active: true, order: 8, folderId: "1ULlb7FeRzKmU2EKWgOo8nmSbXompHEwB" },
+        { id: "addendum", name: "Addendum", badge: "ADD", color: "slate", active: true, order: 9, folderId: "1WgYwwIEcuddA_JnCvD5dLTqPqAF6p0Tp" },
+        { id: "tkdn", name: "Progres Perhitungan TKDN", badge: "TKDN", color: "sky", active: true, order: 10, folderId: "1PQfinUP7qLp-oLYmv6jwRsmera7fzEqb" },
+        { id: "hse", name: "HSE/K3", badge: "K3", color: "red", active: true, order: 11, folderId: "1zVO6eS6YRz1ZLi4pZlvtsV99dpFaUUy7" },
+        { id: "evaluasi", name: "Laporan Evaluasi Kinerja", badge: "EV", color: "slate", active: true, order: 12, folderId: "1oMbnL2ijn_zPsR3meI_clgoD_YKbYH4L" },
+      ];
+
+      function driveFolderUrl(folderIdOrUrl) {
+        const id = extractDriveFolderId(folderIdOrUrl);
+        return id ? `https://drive.google.com/drive/folders/${id}` : "#";
+      }
+
+      function extractDriveFolderId(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+        const patterns = [
+          /\/folders\/([a-zA-Z0-9_-]+)/,
+          /\/file\/d\/([a-zA-Z0-9_-]+)/,
+          /\/document\/d\/([a-zA-Z0-9_-]+)/,
+          /\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/,
+          /\/presentation\/d\/([a-zA-Z0-9_-]+)/,
+          /[?&]id=([a-zA-Z0-9_-]+)/,
+          /^([a-zA-Z0-9_-]{20,})$/,
+        ];
+        for (const pattern of patterns) {
+          const match = raw.match(pattern);
+          if (match?.[1]) return match[1];
+        }
+        return raw;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function slugify(value) {
+        return String(value || "kategori")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "") || "kategori";
+      }
+
+      function normalizeCategoryList(config = projectSetup) {
+        const rawList = Array.isArray(config?.documentCategories)
+          ? config.documentCategories
+          : null;
+
+        if (rawList && rawList.length) {
+          return rawList
+            .map((cat, idx) => ({
+              id: cat.id || slugify(cat.name || `kategori-${idx + 1}`),
+              name: cat.name || `Kategori ${idx + 1}`,
+              badge: cat.badge || String(cat.name || "DOC").slice(0, 4).toUpperCase(),
+              color: cat.color || "slate",
+              active: cat.active !== false,
+              order: Number(cat.order || idx + 1),
+              folderId: extractDriveFolderId(cat.folderId || cat.folderUrl || ""),
+            }))
+            .filter((cat) => cat.name && cat.active !== false)
+            .sort((a, b) => (a.order || 999) - (b.order || 999));
+        }
+
+        const folderMap = config?.documentFolders || {};
+        const fromMap = Object.keys(folderMap).map((name, idx) => ({
+          id: slugify(name),
+          name,
+          badge: String(name).slice(0, 4).toUpperCase(),
+          color: ["indigo", "blue", "teal", "orange", "purple", "emerald", "sky", "red", "slate"][idx % 9],
+          active: true,
+          order: idx + 1,
+          folderId: extractDriveFolderId(folderMap[name]),
+        }));
+
+        return (fromMap.length ? fromMap : DEFAULT_DOCUMENT_CATEGORIES).filter((cat) => cat.active !== false);
+      }
+
+      function colorClasses(color, primary = false) {
+        const map = {
+          indigo: primary ? "bg-indigo-50/70 border-indigo-200 hover:border-indigo-400 text-indigo-800" : "bg-indigo-50 text-indigo-700",
+          blue: primary ? "bg-blue-50/70 border-blue-200 hover:border-blue-400 text-blue-800" : "bg-blue-50 text-blue-700",
+          teal: primary ? "bg-teal-50/70 border-teal-200 hover:border-teal-400 text-teal-800" : "bg-teal-50 text-teal-700",
+          emerald: primary ? "bg-emerald-50/70 border-emerald-200 hover:border-emerald-400 text-emerald-800" : "bg-emerald-50 text-emerald-700",
+          orange: primary ? "bg-orange-50/70 border-orange-200 hover:border-orange-400 text-orange-800" : "bg-orange-50 text-orange-700",
+          purple: primary ? "bg-purple-50/70 border-purple-200 hover:border-purple-400 text-purple-800" : "bg-purple-50 text-purple-700",
+          sky: primary ? "bg-sky-50/70 border-sky-200 hover:border-sky-400 text-sky-800" : "bg-sky-50 text-sky-700",
+          red: primary ? "bg-red-50/70 border-red-200 hover:border-red-400 text-red-800" : "bg-red-50 text-red-700",
+          slate: primary ? "bg-white border-slate-200 hover:border-slate-400 text-slate-800" : "bg-slate-100 text-slate-700",
+        };
+        return map[color] || map.slate;
+      }
+
+      function renderDocumentCategoryCards() {
+        const grid = document.getElementById("documentCategoryGrid");
+        if (!grid) return;
+        const categories = normalizeCategoryList(projectSetup);
+
+        if (!categories.length) {
+          grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400 text-sm">Belum ada kategori dokumen. Tambahkan di Project Setup.</div>`;
+          return;
+        }
+
+        grid.innerHTML = categories
+          .map((cat, idx) => {
+            const count = allDocs.filter((d) => d.category === cat.name).length;
+            const url = driveFolderUrl(cat.folderId);
+            const primaryClasses = colorClasses(cat.color, true);
+            const badgeClasses = colorClasses(cat.color, false);
+            const title = escapeHtml(cat.name);
+            return `
+              <div onclick="window.filterCategory(${escapeHtml(JSON.stringify(cat.name))})" class="doc-category-card ${primaryClasses} p-5 rounded-xl border shadow-sm cursor-pointer hover:shadow-md transition-all group relative">
+                <div class="flex justify-between mb-3">
+                  <h4 class="text-xs font-black uppercase tracking-wider truncate max-w-[70%]">${title}</h4>
+                  <span class="${badgeClasses} text-[10px] font-black px-2 py-0.5 rounded">${escapeHtml(cat.badge || 'DOC')}</span>
+                </div>
+                <div>
+                  <span class="text-4xl font-black ${idx === 0 ? 'text-indigo-700' : 'text-slate-800'}">${count}</span>
+                  <p class="text-[10px] text-slate-500 mt-1 font-semibold">Total File</p>
+                </div>
+                <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="doc-folder-button" title="Buka Folder">
+                  <i class="fas fa-folder-open"></i><span>Buka Folder Drive</span>
+                </a>
+              </div>`;
+          })
+          .join("");
+      }
+
+      function jsonpRequest(url, params = {}) {
+        return new Promise((resolve, reject) => {
+          if (!url || url === "#") {
+            reject(new Error("Apps Script URL belum diisi di Project Setup."));
+            return;
+          }
+          const callbackName = `__proyekapp_jsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          const script = document.createElement("script");
+          const clean = () => {
+            delete window[callbackName];
+            script.remove();
+          };
+          window[callbackName] = (data) => {
+            clean();
+            resolve(data);
+          };
+          const qs = new URLSearchParams({ ...params, callback: callbackName });
+          script.onerror = () => {
+            clean();
+            reject(new Error("Gagal koneksi ke Apps Script."));
+          };
+          script.src = `${url}${url.includes("?") ? "&" : "?"}${qs.toString()}`;
+          document.body.appendChild(script);
+        });
+      }
+
+      async function loadProjectSetup() {
+        try {
+          const snap = await getDoc(doc(db, "project_settings", "default"));
+          if (snap.exists()) {
+            projectSetup = snap.data();
+            projectId = projectSetup.projectId || DEFAULT_PROJECT_ID;
+            APPS_SCRIPT_URL = projectSetup.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
+            applyProjectSetupToUI(projectSetup);
+          }
+        } catch (err) {
+          console.warn("Gagal membaca Project Setup, memakai konfigurasi default.", err);
+        }
+      }
+
+      function getRkmFolderIdFromSetup(config = projectSetup) {
+        const reportFolder = extractDriveFolderId(config?.reportFolders?.kontraktor || "");
+        if (reportFolder) return reportFolder;
+
+        const categories = normalizeCategoryList(config);
+        const rkmCategory = categories.find((cat) => {
+          const name = String(cat.name || "").toLowerCase();
+          const id = String(cat.id || "").toLowerCase();
+          return name === "rkm" || name.includes("rapat kerja mingguan") || id === "rkm";
+        });
+
+        return extractDriveFolderId(rkmCategory?.folderId || rkmCategory?.folderUrl || "");
+      }
+
+      function setRkmFolderButtons(config = projectSetup) {
+        const folderId = getRkmFolderIdFromSetup(config);
+        const url = driveFolderUrl(folderId);
+        ["rkmFolderLink", "rkmFolderLinkMobile"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (url && url !== "#") {
+            el.href = url;
+            el.classList.remove("opacity-60", "pointer-events-none");
+            el.title = "Buka Folder RKM";
+          } else {
+            el.href = "#";
+            el.classList.add("opacity-60", "pointer-events-none");
+            el.title = "Folder RKM belum diatur di Project Setup";
+          }
+        });
+      }
+
+      function setLatestFileButtons(url) {
+        ["konLink", "konLinkMobile"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (url && url !== "#") {
+            el.href = url;
+            el.classList.remove("opacity-60", "pointer-events-none");
+            el.title = "Buka File Terbaru";
+          } else {
+            el.href = "#";
+            el.classList.add("opacity-60", "pointer-events-none");
+            el.title = "File RKM terbaru belum ditemukan";
+          }
+        });
+      }
+
+      function applyProjectSetupToUI(config) {
+        renderDocumentCategoryCards();
+        setRkmFolderButtons(config);
+        setLatestFileButtons(null);
+
+        const mail = config?.mailFolders || {};
+        const inBtn = document.getElementById("mailFolderInBtn");
+        const outBtn = document.getElementById("mailFolderOutBtn");
+        const inUrl = driveFolderUrl(mail["Surat Masuk"]);
+        const outUrl = driveFolderUrl(mail["Surat Keluar"]);
+        if (inBtn && inUrl !== "#") inBtn.href = inUrl;
+        if (outBtn && outUrl !== "#") outBtn.href = outUrl;
+      }
+
+      window.toggleSidebar = () => {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        if (sidebar.classList.contains("-translate-x-full")) {
+          sidebar.classList.remove("-translate-x-full");
+          overlay.classList.remove("hidden");
+        } else {
+          sidebar.classList.add("-translate-x-full");
+          overlay.classList.add("hidden");
+        }
+      };
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) window.location.href = "index.html";
+        else {
+          document.getElementById("userEmail").innerText = user.email;
+          await checkRole(user);
+          await loadProjectSetup();
+          await loadDocuments();
+          await loadWeeklyReports();
+          if (isAdminRole()) {
+            await syncDrive(true);
+            await loadWeeklyReports();
+          }
+        }
+      });
+
+      async function getCurrentUserProfile(user) {
+        // New standard: users/{uid}. Legacy support: users/{email} or email field query.
+        try {
+          const byUid = await getDoc(doc(db, "users", user.uid));
+          if (byUid.exists()) return byUid.data();
+        } catch (err) {
+          console.warn("Gagal membaca user profile by UID, mencoba fallback email.", err);
+        }
+
+        if (user.email) {
+          try {
+            const byEmailId = await getDoc(doc(db, "users", user.email));
+            if (byEmailId.exists()) return byEmailId.data();
+          } catch (err) {
+            console.warn("Gagal membaca user profile by email document ID, mencoba query email.", err);
+          }
+
+          try {
+            const q = query(collection(db, "users"), where("email", "==", user.email));
+            const snap = await getDocs(q);
+            if (!snap.empty) return snap.docs[0].data();
+          } catch (err) {
+            console.warn("Gagal query user profile by email.", err);
+          }
+        }
+
+        // Bootstrap fallback only for old project installations where admin doc was not created yet.
+        if (user.email === "admin@gmail.com") {
+          return { email: user.email, role: "admin", active: true };
+        }
+
+        return null;
+      }
+
+      async function checkRole(user) {
+        const userData = await getCurrentUserProfile(user);
+
+        if (userData) {
+          if (userData.active === false || userData.status === "inactive") {
+            alert("Akun Anda sedang nonaktif. Hubungi administrator.");
+            await signOut(auth);
+            window.location.href = "index.html";
+            throw new Error("inactive-user");
+          }
+          currentUserRole = String(userData.role || "viewer").toLowerCase();
+        } else {
+          currentUserRole = "viewer";
+        }
+
+        document.getElementById("userRole").innerText = currentUserRole.toUpperCase();
+        if (currentUserRole === "admin") {
+          const adminMenu = document.getElementById("adminMenu");
+          if (adminMenu) adminMenu.classList.remove("hidden");
+        }
+        applyRoleAccess();
+      }
+
+      function buildPreviewFromLocalRkmDocs() {
+        const rkmDocs = (allDocs || [])
+          .filter((doc) => String(doc.category || "").toLowerCase() === "rkm" && doc.url)
+          .sort((a, b) => {
+            // Preview RKM mengikuti file terbaru yang di-upload ke Drive.
+            // Jika data lama belum punya drive_created_at, fallback ke waktu input/sync.
+            const uploadDiff = getDocUploadMs(b) - getDocUploadMs(a);
+            if (uploadDiff !== 0) return uploadDiff;
+            return getDocUpdatedMs(b) - getDocUpdatedMs(a);
+          });
+
+        if (!rkmDocs.length) return null;
+        const latest = rkmDocs[0];
+        const fileId = extractDriveFolderId(latest.url || latest.drive_file_id || "");
+        return {
+          name: latest.title || "File RKM terbaru",
+          date: formatDate(latest.drive_created_at || latest.created_at || latest.updated_at || new Date().toISOString()),
+          embedUrl: fileId ? `https://drive.google.com/file/d/${fileId}/preview` : "",
+          viewUrl: latest.url,
+        };
+      }
+
+      async function loadWeeklyReports() {
+        try {
+          const rkmFolderId = getRkmFolderIdFromSetup(projectSetup);
+          const data = await jsonpRequest(APPS_SCRIPT_URL, {
+            action: "getReports",
+            rkmFolderId,
+          });
+
+          const report = data?.report_kontraktor || data?.rkm || buildPreviewFromLocalRkmDocs();
+          updateCard("kon", report);
+        } catch (e) {
+          console.error("Gagal memuat preview RKM:", e);
+          updateCard("kon", buildPreviewFromLocalRkmDocs());
+        }
+      }
+
+      function updateCard(prefix, data) {
+        const ph = document.getElementById(prefix + "Placeholder");
+        const fr = document.getElementById(prefix + "Frame");
+        const dt = document.getElementById(prefix + "Date");
+        const lk = document.getElementById(prefix + "Link");
+
+        if (!data || !data.viewUrl) {
+          if (fr) {
+            fr.src = "";
+            fr.classList.add("hidden");
+          }
+          if (ph) {
+            ph.classList.remove("hidden");
+            ph.innerHTML = `<i class="fas fa-folder-open text-2xl mb-2 text-slate-300"></i><span>Belum ada file RKM terbaru.</span><span class="mt-1 text-[10px] text-slate-400">Cek folder RKM di Project Setup.</span>`;
+          }
+          if (dt) dt.innerHTML = `<i class="far fa-clock"></i> Menunggu data...`;
+          setLatestFileButtons(null);
+          return;
+        }
+
+        const embedUrl = data.embedUrl || "";
+        if (fr && embedUrl) {
+          fr.src = embedUrl;
+          fr.classList.remove("hidden");
+        }
+        if (ph) ph.classList.add("hidden");
+
+        if (dt) {
+          const title = data.name ? ` • ${escapeHtml(data.name)}` : "";
+          dt.innerHTML = `<i class="fas fa-check-circle text-green-500"></i> Updated: ${escapeHtml(data.date || "-")}${title}`;
+        }
+
+        if (lk) lk.href = data.viewUrl;
+        setLatestFileButtons(data.viewUrl);
+      }
+
+      window.refreshDriveReadOnly = async (isAuto = false) => {
+        const btn = document.getElementById("btnSync");
+        const originalText = `<i class="fas fa-sync-alt"></i> <span id="btnSyncLabel" class="hidden md:inline">Refresh Tampilan</span>`;
+
+        if (btn && !isAuto) {
+          btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span id="btnSyncLabel" class="hidden md:inline">Memuat...</span>`;
+          btn.disabled = true;
+        }
+
+        try {
+          const data = await jsonpRequest(APPS_SCRIPT_URL, { action: "syncFiles" });
+          if (data.status !== "success") throw new Error(data.error || "Gagal membaca Drive");
+
+          const driveFiles = (data.files || []).filter(
+            (file) =>
+              file.category !== "Surat Masuk" &&
+              file.category !== "Surat Keluar",
+          );
+
+          const driveFileIds = new Set(driveFiles.map((file) => file.id).filter(Boolean));
+          const syncedCategories = new Set(
+            (data.syncedCategories || driveFiles.map((file) => file.category)).filter(Boolean),
+          );
+          const failedCategories = new Set(
+            (data.folderErrors || []).map((err) => err.category).filter(Boolean),
+          );
+
+          const manualDocs = allDocs.filter((docItem) => !docItem.drive_file_id);
+          const oldSyncedDocsToKeep = allDocs.filter((docItem) => {
+            if (!docItem.drive_file_id) return false;
+            if (driveFileIds.has(docItem.drive_file_id)) return false;
+            if (failedCategories.has(docItem.category)) return true;
+            if (syncedCategories.size && !syncedCategories.has(docItem.category)) return true;
+            return false;
+          });
+
+          const driveDocs = driveFiles
+            .filter((file) => file.id)
+            .map((file) => {
+              const driveCreatedAt = file.drive_created_at || file.created_at || new Date().toISOString();
+              const driveUpdatedAt = file.drive_updated_at || file.updated_at || driveCreatedAt;
+              return {
+                id: `drive-preview-${file.id}`,
+                project_id: projectId,
+                title: file.title,
+                category: file.category,
+                date: String(driveCreatedAt).split("T")[0],
+                url: file.url,
+                drive_file_id: file.id,
+                drive_created_at: driveCreatedAt,
+                drive_updated_at: driveUpdatedAt,
+                mime: file.mime || "",
+                status: "drive_preview",
+                created_at: driveCreatedAt,
+                updated_at: driveUpdatedAt,
+                synced_at: new Date().toISOString(),
+              };
+            });
+
+          allDocs = [...manualDocs, ...oldSyncedDocsToKeep, ...driveDocs];
+          allDocs.sort((a, b) => {
+            const uploadDiff = getDocUploadMs(b) - getDocUploadMs(a);
+            if (uploadDiff !== 0) return uploadDiff;
+            return getDocUpdatedMs(b) - getDocUpdatedMs(a);
+          });
+
+          renderTable(allDocs);
+          updateStats(allDocs);
+          updateCard("kon", buildPreviewFromLocalRkmDocs());
+
+          if (!isAuto) {
+            const folderErrorText = data.folderErrors?.length
+              ? `\nCatatan: ${data.folderErrors.length} folder gagal dibaca, data lama kategori tersebut tetap ditampilkan.`
+              : "";
+            alert(
+              `Refresh tampilan selesai.\n` +
+                `Data terbaru dibaca langsung dari Google Drive.\n` +
+                `Perubahan ini tidak menulis ke database. Admin tetap perlu Refresh Drive untuk sync permanen.` +
+                folderErrorText,
+            );
+          }
+        } catch (err) {
+          if (!isAuto) alert("Gagal refresh tampilan: " + err.message);
+          console.error("Refresh tampilan viewer gagal:", err);
+        } finally {
+          if (btn && !isAuto) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            applyRoleAccess();
+          }
+        }
+      };
+
+      window.syncDrive = async (isAuto = false) => {
+        if (!isAdminRole()) {
+          return await window.refreshDriveReadOnly(isAuto);
+        }
+
+        const btn = document.getElementById("btnSync");
+        const originalText = `<i class="fas fa-sync-alt"></i> <span id="btnSyncLabel" class="hidden md:inline">Refresh Drive</span>`;
+        if (btn && !isAuto) {
+          btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span id="btnSyncLabel" class="hidden md:inline">Syncing...</span>`;
+          btn.disabled = true;
+        }
+
+        try {
+          const data = await jsonpRequest(APPS_SCRIPT_URL, { action: "syncFiles" });
+          if (data.status !== "success") throw new Error(data.error || "Gagal koneksi");
+
+          // Surat Masuk / Surat Keluar sengaja tidak ikut Refresh Drive.
+          // Register Surat sekarang hanya diisi lewat tombol "Input Link Surat",
+          // sedangkan tombol folder surat hanya untuk membuka lokasi Drive.
+          const driveFiles = (data.files || []).filter(
+            (file) =>
+              file.category !== "Surat Masuk" &&
+              file.category !== "Surat Keluar",
+          );
+
+          const driveFileIds = new Set(driveFiles.map((file) => file.id).filter(Boolean));
+          const syncedCategories = new Set(
+            (data.syncedCategories || driveFiles.map((file) => file.category)).filter(Boolean),
+          );
+          const failedCategories = new Set(
+            (data.folderErrors || []).map((err) => err.category).filter(Boolean),
+          );
+
+          const existingByFileId = new Map();
+          allDocs.forEach((docItem) => {
+            if (docItem.drive_file_id) existingByFileId.set(docItem.drive_file_id, docItem);
+          });
+
+          let newCount = 0;
+          let updatedCount = 0;
+          let deletedCount = 0;
+          const writeJobs = [];
+
+          driveFiles.forEach((file) => {
+            if (!file.id) return;
+
+            const driveCreatedAt = file.drive_created_at || file.created_at || new Date().toISOString();
+            const driveUpdatedAt = file.drive_updated_at || file.updated_at || driveCreatedAt;
+            const existing = existingByFileId.get(file.id);
+
+            if (!existing) {
+              newCount++;
+              writeJobs.push(
+                addDoc(collection(db, "project_docs"), {
+                  project_id: projectId,
+                  title: file.title,
+                  category: file.category,
+                  date: String(driveCreatedAt).split("T")[0],
+                  url: file.url,
+                  drive_file_id: file.id,
+                  drive_created_at: driveCreatedAt,
+                  drive_updated_at: driveUpdatedAt,
+                  mime: file.mime || "",
+                  status: "synced",
+                  created_at: driveCreatedAt,
+                  updated_at: driveUpdatedAt,
+                  synced_at: new Date().toISOString(),
+                }),
+              );
+              return;
+            }
+
+            const patch = {
+              title: file.title,
+              category: file.category,
+              date: String(driveCreatedAt).split("T")[0],
+              url: file.url,
+              drive_created_at: driveCreatedAt,
+              drive_updated_at: driveUpdatedAt,
+              mime: file.mime || existing.mime || "",
+              status: "synced",
+              updated_at: driveUpdatedAt,
+              synced_at: new Date().toISOString(),
+            };
+
+            const changed =
+              existing.title !== patch.title ||
+              existing.category !== patch.category ||
+              existing.url !== patch.url ||
+              existing.drive_created_at !== patch.drive_created_at ||
+              existing.drive_updated_at !== patch.drive_updated_at ||
+              existing.mime !== patch.mime;
+
+            if (changed) {
+              updatedCount++;
+              writeJobs.push(updateDoc(doc(db, "project_docs", existing.id), patch));
+            }
+          });
+
+          // Hapus data arsip hasil Drive Sync jika file-nya sudah tidak ada di folder Drive.
+          // Data manual tidak dihapus. Jika sebuah folder gagal dibaca, kategori itu tidak ikut dihapus
+          // agar tidak terjadi penghapusan salah karena permission/koneksi.
+          allDocs.forEach((docItem) => {
+            if (!docItem.drive_file_id) return;
+            if (driveFileIds.has(docItem.drive_file_id)) return;
+            if (failedCategories.has(docItem.category)) return;
+            if (syncedCategories.size && !syncedCategories.has(docItem.category)) return;
+
+            deletedCount++;
+            writeJobs.push(deleteDoc(doc(db, "project_docs", docItem.id)));
+          });
+
+          if (writeJobs.length > 0) await Promise.all(writeJobs);
+
+          await loadDocuments();
+          await loadWeeklyReports();
+
+          if (!isAuto) {
+            const folderErrorText = data.folderErrors?.length
+              ? `\nCatatan: ${data.folderErrors.length} folder gagal dibaca, data kategori tersebut tidak dihapus.`
+              : "";
+            alert(
+              `Refresh Drive selesai.\n` +
+                `File baru: ${newCount}\n` +
+                `File diperbarui: ${updatedCount}\n` +
+                `File terhapus dari arsip: ${deletedCount}` +
+                folderErrorText,
+            );
+          }
+        } catch (err) {
+          if (!isAuto) alert("Error Sync: " + err.message);
+          console.error("Refresh Drive gagal:", err);
+        } finally {
+          if (btn && !isAuto) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+        }
+      };
+
+
+      async function loadDocuments() {
+        const q = query(
+          collection(db, "project_docs"),
+          where("project_id", "==", projectId),
+        );
+        const snap = await getDocs(q);
+        allDocs = [];
+        allMails = [];
+        snap.forEach((d) => {
+          const item = { id: d.id, ...d.data() };
+          if (
+            item.category === "Surat Masuk" ||
+            item.category === "Surat Keluar"
+          ) {
+            // Surat hasil Refresh Drive lama disembunyikan agar Register Surat
+            // tetap menjadi data manual yang dikontrol admin.
+            if (!item.drive_file_id) allMails.push(item);
+          } else {
+            allDocs.push(item);
+          }
+        });
+        allDocs.sort((a, b) => {
+          const uploadDiff = getDocUploadMs(b) - getDocUploadMs(a);
+          if (uploadDiff !== 0) return uploadDiff;
+          return getDocUpdatedMs(b) - getDocUpdatedMs(a);
+        });
+        allMails.sort(
+          (a, b) => toMs(b.created_at) - toMs(a.created_at),
+        );
+        renderTable(allDocs);
+        renderMailTable(allMails);
+        updateStats(allDocs);
+
+        const masuk = allMails.filter(
+          (m) => m.category === "Surat Masuk",
+        ).length;
+        const keluar = allMails.filter(
+          (m) => m.category === "Surat Keluar",
+        ).length;
+        const elMasuk = document.getElementById("countSuratMasuk");
+        const elKeluar = document.getElementById("countSuratKeluar");
+        if (elMasuk) elMasuk.innerText = masuk;
+        if (elKeluar) elKeluar.innerText = keluar;
+      }
+
+      function formatDate(isoString) {
+        if (!isoString) return "-";
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return "-";
+        return date.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function toMs(value) {
+        if (!value) return 0;
+        const ms = new Date(value).getTime();
+        return Number.isNaN(ms) ? 0 : ms;
+      }
+
+      function getDocUploadMs(item) {
+        // Untuk dokumen hasil Drive Sync, pakai waktu file dibuat/upload di Google Drive.
+        // Untuk dokumen manual, pakai waktu input manual di dashboard.
+        return toMs(item?.drive_created_at || item?.created_at || item?.updated_at);
+      }
+
+      function getDocUpdatedMs(item) {
+        return toMs(item?.drive_updated_at || item?.updated_at || item?.created_at || item?.drive_created_at);
+      }
+
+      function renderTable(data) {
+        const tbody = document.getElementById("docTableBody");
+        tbody.innerHTML = "";
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="table-empty">Belum ada dokumen.</td></tr>`;
+          return;
+        }
+        data.forEach((d) => {
+          const sourceChip = d.drive_file_id
+            ? `<span class="archive-source-chip"><i class="fab fa-google-drive"></i> Synced Drive</span>`
+            : `<span class="archive-source-chip manual"><i class="fa-regular fa-pen-to-square"></i> Input Manual</span>`;
+
+          const deleteBtn = "";
+
+          tbody.innerHTML += `
+            <tr>
+              <td data-label="Judul Dokumen">
+                <div class="archive-title">${d.title}</div>
+                <div class="archive-submeta">${sourceChip}</div>
+              </td>
+              <td data-label="Kategori">
+                <span class="archive-category-chip">${d.category || '-'}</span>
+              </td>
+              <td data-label="Waktu Upload">
+                <div class="archive-date">${formatDate(d.drive_created_at || d.created_at)}</div>
+              </td>
+              <td data-label="Aksi" class="archive-actions-cell">
+                <div class="archive-actions">
+                  <a href="${d.url}" target="_blank" class="archive-btn archive-btn-primary">
+                    <i class="fa-regular fa-folder-open"></i><span>Buka File</span>
+                  </a>
+                  ${deleteBtn}
+                </div>
+              </td>
+            </tr>`;
+        });
+      }
+
+      function renderMailTable(data) {
+        const tbody = document.getElementById("mailTableBody");
+        tbody.innerHTML = "";
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="table-empty">Belum ada surat.</td></tr>`;
+          return;
+        }
+
+        data.forEach((d, idx) => {
+          const badge =
+            d.category === "Surat Masuk"
+              ? "bg-indigo-100 text-indigo-700 border-indigo-200"
+              : "bg-pink-100 text-pink-700 border-pink-200";
+
+          const delBtn = "";
+
+          const asal = d.asal_surat || d.asalSurat || "-";
+          const tglTerima = d.tgl_surat_diterima || d.tglDiterima || "-";
+          const ket = d.ket || d.keterangan || "-";
+          const tglSurat = d.date || "-";
+
+          tbody.innerHTML += `
+            <tr class="align-top">
+              <td data-label="No." class="mail-mono">${idx + 1}</td>
+              <td data-label="Tanggal Surat" class="mail-mono">${tglSurat}</td>
+              <td data-label="Tipe">
+                <span class="mail-badge ${badge} border">
+                  <i class="fa-regular fa-envelope"></i>
+                  ${d.category}
+                </span>
+              </td>
+              <td data-label="Perihal / Judul Surat" class="mail-cell-title">
+                <div class="mail-title">${d.title}</div>
+              </td>
+              <td data-label="Asal Surat" class="mail-muted">${asal}</td>
+              <td data-label="Tgl Diterima" class="mail-mono">${tglTerima}</td>
+              <td data-label="Keterangan" class="mail-muted">${ket}</td>
+              <td data-label="Waktu Upload" class="mail-mono">${formatDate(d.created_at)}</td>
+              <td data-label="File" class="mail-actions-cell">
+                <div class="mail-actions">
+                  <a href="${d.url}" target="_blank" class="mail-btn-open">
+                    <i class="fa-regular fa-folder-open"></i><span>Buka File</span>
+                  </a>
+                  ${delBtn}
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      function updateStats(data) {
+        renderDocumentCategoryCards();
+      }
+
+      window.filterMail = () => {
+        const type = document.getElementById("filterMailType").value;
+        const start = document.getElementById("filterMailStart").value;
+        const end = document.getElementById("filterMailEnd").value;
+        const search = document
+          .getElementById("searchMail")
+          .value.toLowerCase();
+        let filtered = allMails.filter((d) => {
+          let matchType = type === "all" || d.category === type;
+          let matchSearch = d.title.toLowerCase().includes(search);
+          let matchDate = true;
+          if (start && end) {
+            const dDate = new Date(d.date);
+            matchDate = dDate >= new Date(start) && dDate <= new Date(end);
+          }
+          return matchType && matchSearch && matchDate;
+        });
+        renderMailTable(filtered);
+      };
+
+      document
+        .getElementById("searchMail")
+        .addEventListener("keyup", window.filterMail);
+
+      window.openModal = (type) => {
+        if (!isAdminRole()) {
+          alert("Akses ditolak. Input dokumen dan surat hanya untuk Admin.");
+          return;
+        }
+
+        const modal = document.getElementById("addModal");
+        const select = document.getElementById("inpCategory");
+        const extra = document.getElementById("mailExtraFields");
+
+        modal.classList.remove("hidden");
+
+        if (type === "surat") {
+          document.getElementById("modalTitle").innerText = "Input Link Surat";
+          select.innerHTML = `<option value="Surat Masuk">Surat Masuk</option><option value="Surat Keluar">Surat Keluar</option>`;
+          if (extra) extra.classList.remove("hidden");
+        } else {
+          document.getElementById("modalTitle").innerText =
+            "Input Dokumen Proyek";
+          const categories = normalizeCategoryList(projectSetup);
+          select.innerHTML = categories.length
+            ? categories.map((cat) => `<option value="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</option>`).join("")
+            : `<option value="Dokumen Umum">Dokumen Umum</option>`;
+          if (extra) extra.classList.add("hidden");
+        }
+      };
+
+      window.closeModal = () =>
+        document.getElementById("addModal").classList.add("hidden");
+
+      document.getElementById("addDocForm").onsubmit = async (e) => {
+        e.preventDefault();
+        if (!isAdminRole()) {
+          alert("Akses ditolak. Input dokumen dan surat hanya untuk Admin.");
+          window.closeModal();
+          return;
+        }
+
+        try {
+          const cat = document.getElementById("inpCategory").value;
+          const asalSuratEl = document.getElementById("inpAsalSurat");
+          const tglTerimaEl = document.getElementById("inpTglDiterima");
+          const ketEl = document.getElementById("inpKet");
+
+          const payload = {
+            project_id: projectId,
+            title: document.getElementById("inpTitle").value,
+            category: cat,
+            date: document.getElementById("inpDate").value,
+            url: document.getElementById("inpUrl").value,
+            status: "pending",
+            created_at: new Date().toISOString(),
+          };
+
+          if (cat === "Surat Masuk" || cat === "Surat Keluar") {
+            payload.asal_surat = (asalSuratEl?.value || "").trim();
+            payload.tgl_surat_diterima = (tglTerimaEl?.value || "").trim();
+            payload.ket = (ketEl?.value || "").trim();
+          }
+
+          await addDoc(collection(db, "project_docs"), payload);
+
+          alert("Berhasil disimpan!");
+          window.closeModal();
+          document.getElementById("addDocForm").reset();
+
+          const extra = document.getElementById("mailExtraFields");
+          if (extra) extra.classList.add("hidden");
+
+          loadDocuments();
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      };
+
+      window.filterCategory = (val) => {
+        const filtered = allDocs.filter((d) => d.category === val);
+        renderTable(filtered);
+        document.getElementById("filterBadgeContainer").innerHTML =
+          `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-2"><i class="fas fa-filter"></i> ${val}</span>`;
+
+        const arsipTable = document.getElementById("arsipSection");
+        const mainContent = document.getElementById("mainContent");
+
+        if (arsipTable && mainContent) {
+          mainContent.scrollTo({
+            top: arsipTable.offsetTop - 20,
+            behavior: "smooth",
+          });
+        }
+      };
+
+      window.resetFilter = () => {
+        renderTable(allDocs);
+        document.getElementById("filterBadgeContainer").innerHTML = "";
+      };
+
+      window.delDoc = async (id) => {
+        if (confirm("Hapus data ini?")) {
+          await deleteDoc(doc(db, "project_docs", id));
+          loadDocuments();
+        }
+      };
+
+      document.getElementById("logoutBtn").onclick = () => signOut(auth);
+      document.getElementById("searchInp").addEventListener("keyup", (e) => {
+        const term = e.target.value.toLowerCase();
+        renderTable(
+          allDocs.filter(
+            (d) =>
+              d.title.toLowerCase().includes(term) ||
+              d.category.toLowerCase().includes(term),
+          ),
+        );
+      });
+    </script>
+  </body>
+</html>

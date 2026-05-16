@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Proyek</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="ui.css?v=recent-archive-checked-time-2" rel="stylesheet"/>
+<style>
+  /* Archive modal opacity fix
+     ui.css makes .bg-slate-50 transparent globally so the dashboard canvas can show through.
+     The archive detail popup needs an opaque surface so archived content stays readable. */
+  #weeklyArchiveModal .weekly-archive-dialog,
+  #weeklyArchiveModalContent {
+    background-color: #f8fafc !important;
+  }
+
+  #weeklyArchiveModal .weekly-archive-dialog {
+    isolation: isolate;
+  }
+
+  #weeklyArchiveModal .bg-slate-50 {
+    background-color: #f8fafc !important;
+  }
+
+  #weeklyArchiveModal .bg-white,
+  #weeklyArchiveModal section,
+  #weeklyArchiveModal table {
+    background-color: #ffffff !important;
+  }
+</style>
+
+</head>
+<body class="bg-slate-50 text-slate-900">
+<div class="fixed inset-0 bg-black/50 z-40 hidden xl:hidden transition-opacity" id="sidebarOverlay" onclick="window.toggleSidebar()"></div>
+<div class="flex h-screen overflow-hidden">
+<aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform -translate-x-full xl:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col" id="sidebar">
+<div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg">
+<i class="fas fa-building"></i>
+</div>
+<span class="font-bold text-lg tracking-tight text-slate-800">Proyek<span class="text-blue-600">App</span></span>
+</div>
+<button class="xl:hidden text-slate-400 hover:text-red-500" onclick="window.toggleSidebar()">
+<i class="fas fa-times text-xl"></i>
+</button>
+</div>
+<nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+<p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+            Main Menu
+          </p>
+<a class="nav-item active flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors" href="dashboard.html"><i class="fas fa-th-large w-6 text-center mr-2"></i> Dashboard</a>
+<a class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors" href="documents.html"><i class="fas fa-folder-open w-6 text-center mr-2"></i> Dokumen</a>
+<div class="hidden mt-6" id="adminMenu">
+<p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">
+              Admin Console
+            </p>
+<a class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors" href="users.html"><i class="fas fa-users-cog w-6 text-center mr-2"></i> User
+              Management</a>
+<a class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors" href="setup.html"><i class="fas fa-sliders w-6 text-center mr-2"></i> Project Setup</a>
+</div>
+</nav>
+<div class="p-4 border-t border-slate-100">
+<div class="media-heading flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-slate-200">
+<i class="fas fa-user"></i>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-slate-900 truncate" id="userEmail">
+                Loading...
+              </p>
+<p class="text-xs text-blue-600 font-bold truncate" id="userRole">
+                ...
+              </p>
+</div>
+<button class="text-slate-400 hover:text-red-600 transition" id="logoutBtn" title="Logout">
+<i class="fas fa-sign-out-alt"></i>
+</button>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col xl:ml-64 overflow-hidden transition-all duration-300">
+<header class="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-4 xl:px-8 shadow-sm sticky top-0 z-30">
+<div class="flex items-center gap-4">
+<button class="xl:hidden text-slate-500 hover:text-blue-600 p-2" onclick="window.toggleSidebar()">
+<i class="fas fa-bars text-xl"></i>
+</button>
+<div class="flex items-center text-sm text-slate-500">
+<span class="hidden md:inline hover:text-blue-600 cursor-pointer">Portal</span><i class="fas fa-chevron-right text-xs mx-2 hidden md:inline"></i><span class="font-bold text-slate-800">Dashboard</span>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 xl:p-8">
+<div class="hidden mb-6 rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-4 shadow-sm" id="deadlineAlert">
+<div class="flex items-start gap-3">
+<div class="mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" id="deadlineAlertIcon"></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-extrabold" id="deadlineAlertTitle"></p>
+<p class="text-xs mt-1" id="deadlineAlertText"></p>
+<div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3" id="deadlineAlertDetails"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 fade-in">
+<div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group">
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase">
+                  Deviasi
+                </p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1" id="deviasiVal">
+                  -
+                </h3>
+<span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-bold mt-1 inline-block" id="deviasiText">...</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+<i class="fas fa-chart-line"></i>
+</div>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group">
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase">
+                  Progress Fisik
+                </p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1" id="progressVal">
+                  0%
+                </h3>
+<p class="text-xs text-slate-500">Realisasi Kumulatif</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+<i class="fas fa-percent"></i>
+</div>
+</div>
+<div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group">
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase">
+                  Checklist Monitoring
+                </p>
+<h3 class="text-2xl font-bold text-slate-800 mt-1" id="checkKPI">
+                  0/0
+                </h3>
+<div class="w-24 h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
+<div class="h-full bg-green-500 w-0 transition-all duration-1000" id="checkKPIBar"></div>
+</div>
+</div>
+<div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center border border-green-100">
+<i class="fas fa-tasks"></i>
+</div>
+</div>
+<a class="bg-gradient-to-br from-blue-600 to-indigo-700 p-5 rounded-xl shadow-lg shadow-blue-200 text-white hover:shadow-xl transition flex flex-col justify-center items-start group cursor-pointer" href="https://drive.google.com/drive/folders/1kelZSuQhXbIzVL_BiZAUMswgsrud2Aih?usp=drive_link" target="_blank">
+<div class="flex items-center justify-between w-full">
+<i class="fab fa-google-drive text-2xl opacity-80 group-hover:scale-110 transition"></i><i class="fas fa-external-link-alt opacity-50 text-sm"></i>
+</div>
+<p class="font-bold mt-2 text-sm">Buka Drive RKM</p>
+</a>
+</div>
+
+<section class="bg-white p-3 sm:p-5 xl:p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 fade-in overflow-hidden" id="mediaSection">
+  <div class="media-header flex flex-col md:flex-row justify-between items-start md:items-center mb-4 sm:mb-6 gap-4 border-b border-slate-100 pb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center">
+        <i class="fas fa-photo-film"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-slate-800 text-lg">Media Proyek</h3>
+        <p class="text-xs text-slate-500">Klik Foto, Video, atau SketchUp untuk membuka detail di panel besar.</p>
+      </div>
+    </div>
+    <div class="media-actions flex flex-wrap items-center gap-2">
+      <button id="editSketchupLinkBtn" onclick="window.openSketchupLinkModal()" class="hidden admin-only text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 hover:bg-indigo-100 transition flex items-center gap-2" type="button">
+        <i class="fas fa-cube"></i> Atur Link SketchUp
+      </button>
+      <select class="text-xs font-bold text-cyan-700 bg-cyan-50 border border-cyan-100 rounded px-3 py-2 outline-none cursor-pointer" id="photoFolderSelect" onchange="window.filterPhotosByFolder(this.value)">
+        <option value="all">Semua Foto</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="mediaLayoutGrid" class="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr),minmax(280px,0.8fr)] gap-4">
+    <div class="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50 min-h-[360px] relative flex items-center justify-center" id="mediaMainPanel">
+      <div id="mediaPhotoView" class="absolute inset-0 flex items-center justify-center">
+        <img alt="Foto proyek" class="hidden w-full h-full object-contain bg-slate-950" id="photoSliderImg" src="" />
+        <div class="text-center text-slate-400 text-sm p-8" id="photoSliderEmpty">
+          <i class="fas fa-image text-3xl mb-2 block"></i>Belum ada foto dari GAS.
+        </div>
+        <button class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-700 w-9 h-9 sm:w-10 sm:h-10 rounded-full shadow" onclick="event.stopPropagation(); window.changePhoto(-1)" title="Foto sebelumnya">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-700 w-9 h-9 sm:w-10 sm:h-10 rounded-full shadow" onclick="event.stopPropagation(); window.changePhoto(1)" title="Foto berikutnya">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 bg-slate-900/70 text-white text-[11px] sm:text-xs px-3 py-1.5 rounded-full hidden max-w-[80%] truncate" id="photoCaption"></div>
+      </div>
+
+      <div id="mediaVideoView" class="absolute inset-0 hidden bg-slate-950">
+        <iframe allowfullscreen class="w-full h-full bg-black" id="videoMainFrame" src=""></iframe>
+        <div class="h-full flex items-center justify-center text-sm text-slate-400 bg-white" id="videoMainEmpty">Belum ada video.</div>
+      </div>
+
+      <div id="mediaSketchupView" class="absolute inset-0 hidden bg-slate-950">
+        <iframe allowfullscreen class="w-full h-full bg-black" id="sketchupMainFrame" src=""></iframe>
+        <div class="h-full flex items-center justify-center text-sm text-slate-400 bg-white" id="sketchupMainEmpty">Belum ada preview 3D.</div>
+      </div>
+    </div>
+
+    <div id="mediaTabList" class="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3 sm:gap-4">
+      <div role="button" tabindex="0" onclick="window.setActiveMedia('photo')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.setActiveMedia('photo')}" id="mediaTabPhoto" class="media-tab w-full text-left border border-cyan-200 rounded-xl overflow-hidden bg-cyan-50 ring-2 ring-cyan-200 transition hover:shadow-md cursor-pointer">
+        <div class="px-4 py-3 bg-cyan-50 text-xs font-extrabold text-cyan-700 uppercase flex items-center justify-between gap-2">
+          <span class="truncate"><i class="fas fa-image mr-2"></i>Foto</span>
+          <span id="photoCountBadge" class="text-[10px] px-2 py-1 rounded-full bg-white text-cyan-700 border border-cyan-100 whitespace-nowrap">0 file</span>
+        </div>
+        <div class="media-card-preview relative h-28 sm:h-32 xl:h-28 bg-slate-100 overflow-hidden">
+          <img id="photoTabPreviewImg" alt="Preview foto" class="hidden w-full h-full object-cover" src="" />
+          <div id="photoTabPreviewEmpty" class="absolute inset-0 flex flex-col items-center justify-center text-[11px] text-slate-400 gap-1 bg-slate-50">
+            <i class="fas fa-image text-lg"></i><span>Belum ada foto</span>
+          </div>
+        </div>
+        <div class="px-4 py-3 text-[11px] text-slate-500 min-h-[44px] flex items-center" id="photoTabText">Klik untuk menampilkan foto di panel besar.</div>
+      </div>
+
+      <div role="button" tabindex="0" onclick="window.setActiveMedia('video')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.setActiveMedia('video')}" id="mediaTabVideo" class="media-tab w-full text-left border border-slate-100 rounded-xl overflow-hidden bg-slate-50 transition hover:shadow-md cursor-pointer">
+        <div class="px-4 py-3 bg-slate-100 text-xs font-extrabold text-slate-600 uppercase flex items-center justify-between gap-2">
+          <span class="truncate"><i class="fas fa-video mr-2"></i>Video</span>
+          <span id="videoStatusBadge" class="text-[10px] px-2 py-1 rounded-full bg-white text-slate-600 border border-slate-200 whitespace-nowrap">empty</span>
+        </div>
+        <div class="media-card-preview relative h-28 sm:h-32 xl:h-28 bg-slate-950 overflow-hidden">
+          <iframe id="videoTabPreviewFrame" title="Preview video" class="hidden w-full h-full pointer-events-none bg-black" src="" allowfullscreen></iframe>
+          <div id="videoTabPreviewEmpty" class="absolute inset-0 flex flex-col items-center justify-center text-[11px] text-slate-400 gap-1 bg-slate-50">
+            <i class="fas fa-video text-lg"></i><span>Belum ada video</span>
+          </div>
+          <div class="absolute inset-0 bg-black/0"></div>
+        </div>
+        <div class="px-4 py-3 text-[11px] text-slate-500 space-y-2 min-h-[54px]">
+          <div id="videoTabText">Belum ada video.</div>
+          <div id="videoTabControls" class="hidden items-center justify-between gap-2">
+            <button type="button" onclick="event.stopPropagation(); window.changeVideo(-1)" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600"><i class="fas fa-chevron-left"></i></button>
+            <span id="videoTabCounter" class="text-[10px] font-bold text-slate-500">1/1</span>
+            <button type="button" onclick="event.stopPropagation(); window.changeVideo(1)" class="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div role="button" tabindex="0" onclick="window.setActiveMedia('sketchup')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.setActiveMedia('sketchup')}" id="mediaTabSketchup" class="media-tab w-full text-left border border-slate-100 rounded-xl overflow-hidden bg-slate-50 transition hover:shadow-md cursor-pointer">
+        <div class="px-4 py-3 bg-slate-100 text-xs font-extrabold text-slate-600 uppercase flex items-center justify-between gap-2">
+          <span class="truncate"><i class="fas fa-cube mr-2"></i>SketchUp / 3D</span>
+          <span id="sketchupStatusBadge" class="text-[10px] px-2 py-1 rounded-full bg-white text-slate-600 border border-slate-200 whitespace-nowrap">empty</span>
+        </div>
+        <div class="media-card-preview relative h-28 sm:h-32 xl:h-28 bg-slate-950 overflow-hidden">
+          <iframe id="sketchupTabPreviewFrame" title="Preview SketchUp / 3D" class="hidden w-full h-full pointer-events-none bg-black" src="" allowfullscreen></iframe>
+          <div id="sketchupTabPreviewEmpty" class="absolute inset-0 flex flex-col items-center justify-center text-[11px] text-slate-400 gap-1 bg-slate-50">
+            <i class="fas fa-cube text-lg"></i><span>Belum ada 3D</span>
+          </div>
+          <div class="absolute inset-0 bg-black/0"></div>
+        </div>
+        <div class="px-4 py-3 text-[11px] text-slate-500 space-y-2 min-h-[54px]">
+          <div id="sketchupTabText">Belum ada preview 3D.</div>
+          <div id="sketchupManualHint" class="hidden text-[11px] text-indigo-600 font-semibold">
+            <i class="fas fa-link mr-1"></i> Link bisa diubah dari tombol Atur Link SketchUp.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+<div class="media-header flex flex-col md:flex-row justify-between items-start md:items-center mb-4 sm:mb-6 gap-4 border-b border-slate-100 pb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+<i class="fas fa-chart-area"></i>
+</div>
+<div>
+<h3 class="font-bold text-slate-800 text-lg">
+                    Kurva S (Progres Fisik)
+                  </h3>
+</div>
+</div>
+<div class="hidden items-center gap-2" id="adminChartActions">
+<button class="text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100 transition flex items-center gap-2" onclick="window.openSCurveModal()">
+<i class="fas fa-edit"></i> Input Manual
+                </button>
+<div class="h-6 w-px bg-slate-200 mx-1"></div>
+<button class="text-xs font-bold text-slate-500 border px-3 py-2 rounded-lg hover:bg-slate-50 transition flex items-center gap-2" onclick="window.downloadTemplate()">
+<i class="fas fa-download"></i> Template
+                </button>
+<input accept=".csv" class="hidden" id="csvInput" type="file"/>
+<label class="cursor-pointer bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-slate-900 transition shadow-sm" for="csvInput"><i class="fas fa-upload"></i> Upload CSV</label>
+</div>
+</div>
+<div class="h-[400px] w-full relative">
+<canvas id="sCurveChart"></canvas>
+</div>
+</div>
+<section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6 fade-in">
+<div class="bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-700 text-white px-5 py-4 sm:px-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative overflow-hidden">
+<div class="absolute right-0 top-0 bottom-0 w-72 bg-white/10 skew-x-[-20deg] translate-x-10"></div>
+<div class="relative z-10 min-w-0">
+<p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-100/90 mb-1">Project Overview</p>
+<h2 class="font-bold text-xl tracking-tight">Executive Summary</h2>
+</div>
+<div class="relative z-10 flex flex-wrap items-center gap-2 sm:justify-end">
+<button class="hidden admin-only text-xs bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-xl font-semibold transition flex items-center gap-2 border border-white/20 backdrop-blur-sm" id="editSummaryBtn" onclick="window.openSummaryModal()">
+<i class="fas fa-pen-to-square"></i><span>Edit Laporan</span>
+</button>
+<button class="hidden admin-only text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl font-semibold transition flex items-center gap-2 border border-emerald-400/40 shadow-sm" id="archiveBtn" onclick="window.archiveCurrentWeek()" type="button">
+<i class="fas fa-box-archive"></i><span>Tutup Minggu</span>
+</button>
+<span class="text-xs font-semibold bg-white/12 px-3.5 py-2 rounded-xl border border-white/20 backdrop-blur-sm" id="sumMingguKe">MINGGU KE - 0</span>
+</div>
+</div>
+<div class="p-5 sm:p-6 xl:p-7 space-y-6 bg-gradient-to-b from-slate-50/50 to-white">
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.8fr),minmax(320px,0.9fr)] gap-6 items-start">
+<div class="space-y-4">
+<div>
+<p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-1">Informasi Proyek</p>
+<h3 class="text-2xl font-bold text-slate-900 tracking-tight" id="sumNama">Memuat...</h3>
+<p class="text-sm text-slate-500 mt-1">Ringkasan identitas kontrak dan pelaksana proyek.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">Lokasi Proyek</p><p class="text-sm font-semibold text-slate-800 leading-6" id="sumLokasi">-</p></div>
+<div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">Pengguna Jasa</p><p class="text-sm font-semibold text-slate-800 leading-6" id="sumPengguna">-</p></div>
+<div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">Konsultan MK</p><p class="text-sm font-semibold text-slate-800 leading-6" id="sumMK">-</p></div>
+<div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">Kontraktor Pelaksana</p><p class="text-sm font-semibold text-slate-800 leading-6" id="sumKontraktor">-</p></div>
+<div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm md:col-span-2"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-2">Nomor Kontrak</p><p class="text-sm font-semibold text-slate-800 leading-6 break-all font-mono" id="sumNoKontrak">-</p></div>
+<div class="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-4 shadow-sm md:col-span-2"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-500 mb-2">Nilai Kontrak</p><p class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight" id="sumNilai">Rp 0</p></div>
+</div>
+</div>
+<aside class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+<div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+<div><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-1">Timeline</p><h3 class="text-lg font-bold text-slate-900">Ringkasan Waktu</h3></div>
+<button class="hidden admin-only text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-xl font-semibold hover:bg-blue-100 transition border border-blue-100 whitespace-nowrap" id="editPhoBtn1" onclick="window.openPhoModal()"><i class="fas fa-calendar-pen mr-1"></i> Ubah Tgl</button>
+</div>
+<div class="p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
+<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-1">Tanggal Kontrak</p><p class="text-base font-bold text-slate-900" id="lblStartDate">-</p></div>
+<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400 mb-1">Waktu Pelaksanaan</p><p class="text-base font-black text-slate-900"><span id="timeTotal">0</span> <span class="text-xs font-bold text-slate-500">hari</span></p></div>
+<div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-500 mb-1">Waktu Terpakai</p><p class="text-base font-black text-blue-700"><span id="timeUsed">0</span> <span class="text-xs font-bold text-blue-500">hari</span></p></div>
+<div class="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3"><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-500 mb-1">Sisa Waktu Kontrak</p><p class="text-base font-black text-rose-700"><span id="timeRemain">0</span> <span class="text-xs font-bold text-rose-500">hari</span></p></div>
+<div class="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-4 sm:col-span-2 xl:col-span-1"><div class="flex items-center justify-between gap-4"><div><p class="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-500 mb-1">Persen Waktu Terpakai</p><p class="text-xs text-slate-500">Proporsi durasi proyek yang sudah berjalan.</p></div><p class="text-2xl font-black text-indigo-700 whitespace-nowrap"><span id="timePercent">0,00</span><span class="text-base ml-1">%</span></p></div></div>
+</div>
+</aside>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.6fr),minmax(320px,0.95fr)] gap-6">
+<section class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4"><div><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-1">Progress Breakdown</p><h3 class="text-lg font-bold text-slate-900">Rincian Divisi</h3></div><p class="text-xs text-slate-500">Bobot dan progres aktual per divisi pekerjaan.</p></div>
+<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-slate-200 text-slate-500"><th class="py-3 pr-3 text-left font-bold">Divisi</th><th class="py-3 px-3 text-right font-bold">Bobot</th><th class="py-3 pl-3 text-right font-bold">Progress</th></tr></thead><tbody id="divisionSummaryRows" class="divide-y divide-slate-100"></tbody><tfoot id="divisionSummaryFoot" class="border-t border-slate-200 text-slate-900 font-bold"></tfoot></table></div>
+</section>
+<section class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5"><div class="mb-4"><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-1">Visual Summary</p><h3 class="text-lg font-bold text-slate-900">Komposisi Bobot Divisi</h3><p class="text-xs text-slate-500 mt-1">Distribusi bobot pekerjaan untuk membaca komposisi proyek secara cepat.</p></div><div class="relative h-[280px] sm:h-[320px]"><canvas id="divisionPieChart"></canvas></div></section>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<section class="rounded-2xl border border-rose-100 bg-rose-50/60 shadow-sm p-5"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center"><i class="fas fa-triangle-exclamation"></i></div><div><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500 mb-1">Critical Notes</p><h3 class="text-lg font-bold text-slate-900">Permasalahan</h3></div></div><ul id="summaryMasalahList" class="space-y-2 text-sm text-slate-700 list-disc pl-5 marker:text-rose-500"></ul></section>
+<section class="rounded-2xl border border-emerald-100 bg-emerald-50/60 shadow-sm p-5"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center"><i class="fas fa-lightbulb"></i></div><div><p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-500 mb-1">Action Plan</p><h3 class="text-lg font-bold text-slate-900">Solusi</h3></div></div><ul id="summarySolusiList" class="space-y-2 text-sm text-slate-700 list-disc pl-5 marker:text-emerald-500"></ul></section>
+</div>
+<div class="rounded-2xl border border-indigo-100 bg-white/80 p-5 shadow-sm" id="weeklyArchivePanel">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+    <div>
+      <p class="text-[11px] font-extrabold text-slate-500 uppercase tracking-[0.18em] flex items-center gap-2"><i class="fas fa-box-archive text-indigo-600"></i> Arsip Mingguan Proyek</p>
+      <h3 class="text-base font-extrabold text-slate-900 mt-1">Snapshot Executive Summary & Checklist</h3>
+      <p class="text-xs text-slate-500 mt-1">Arsip dibuat saat Tutup Minggu. Data Executive Summary, Kurva S, dan Checklist tersimpan sebagai histori read-only.</p>
+    </div>
+    <div class="rounded-xl border border-indigo-100 bg-white px-4 py-3 min-w-[160px]">
+      <p class="text-[10px] uppercase font-extrabold text-slate-400">Total Arsip</p>
+      <p class="text-2xl font-black text-indigo-700 leading-none mt-1" id="weeklyArchiveCount">0</p>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" id="weeklyArchiveRows">
+    <div class="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-400">Belum ada arsip mingguan.</div>
+  </div>
+</div>
+</div>
+</section>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col min-h-0 mb-12">
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-4 border-b border-slate-100 gap-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+<i class="fas fa-clipboard-check"></i>
+</div>
+<div>
+<h3 class="font-bold text-slate-800 text-lg">
+                    Kontrol Dokumen Berkala
+                  </h3>
+<div class="flex items-center gap-2 mt-1">
+<p class="text-xs text-slate-400">Periode:</p>
+<select class="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-2 py-1 outline-none cursor-pointer hover:bg-indigo-100 transition" id="checklistPeriodSelect" onchange="window.changeChecklistPeriod(this.value)">
+<option value="current">Minggu Ini (Aktif)</option>
+</select>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full lg:w-auto bg-slate-50 p-2 rounded-lg border border-slate-100">
+<div class="px-2 border-r border-slate-200">
+<p class="text-[10px] text-slate-400 uppercase font-bold">
+                    On Time
+                  </p>
+<p class="text-lg font-black text-green-500 leading-none" id="statOnTime">
+                    0
+                  </p>
+</div>
+<div class="px-2 border-r border-slate-200">
+<p class="text-[10px] text-slate-400 uppercase font-bold">
+                    Belum Ada / Telat
+                  </p>
+<p class="text-lg font-black text-red-500 leading-none" id="statLate">
+                    0
+                  </p>
+</div>
+<div class="px-2">
+<p class="text-[10px] text-slate-400 uppercase font-bold">
+                    Total
+                  </p>
+<p class="text-lg font-black text-slate-700 leading-none" id="statTotal">
+                    0
+                  </p>
+</div>
+
+</div>
+</div>
+<div class="hidden mb-6 flex-col gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm" id="adminChecklistActions">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div>
+      <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wide flex items-center gap-2"><i class="fas fa-clipboard-check text-blue-600"></i> Aksi Dokumen</p>
+      <h3 class="text-base font-extrabold text-slate-900 mt-1">Kelola checklist periode aktif</h3>
+      <p class="text-xs text-slate-500 mt-1">Gunakan laporan rutin untuk dokumen berulang. Gunakan item manual untuk dokumen sekali jalan atau dokumen khusus.</p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-2 lg:justify-end">
+      <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-2" onclick="window.openChecklistTemplateModal()" type="button">
+        <i class="fas fa-repeat"></i> Atur Laporan Rutin
+      </button>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-2" onclick="window.toggleManualChecklistForm()" type="button">
+        <i class="fas fa-plus"></i> Tambah Item Manual
+      </button>
+      <button class="border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2" onclick="window.applyTemplatesToActivePeriod()" type="button">
+        <i class="fas fa-wand-magic-sparkles text-indigo-600"></i> Generate Otomatis
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div class="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
+      <p class="text-[11px] font-extrabold text-indigo-700 uppercase">Laporan rutin aktif</p>
+      <p class="text-2xl font-black text-indigo-700 mt-1"><span id="checklistTemplateCount">0</span></p>
+      <p class="text-xs text-slate-500 mt-1">Auto-generate item harian/mingguan.</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p class="text-[11px] font-extrabold text-slate-500 uppercase">Item manual</p>
+      <p class="text-sm font-bold text-slate-800 mt-2">Untuk dokumen khusus</p>
+      <p class="text-xs text-slate-500 mt-1">Contoh: dokumen audit, addendum, atau tugas mendadak.</p>
+    </div>
+    <div class="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+      <p class="text-[11px] font-extrabold text-amber-700 uppercase">Cara pakai paling mudah</p>
+      <p class="text-xs text-slate-600 mt-2 leading-5">Atur laporan rutin sekali, lalu sistem membuat checklist otomatis saat periode dibuka atau minggu ditutup.</p>
+    </div>
+  </div>
+
+  <div id="manualChecklistForm" class="hidden rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <div>
+        <p class="text-xs font-extrabold text-blue-700 uppercase flex items-center gap-2"><i class="fas fa-plus-circle"></i> Tambah Item Manual</p>
+        <p class="text-xs text-slate-500 mt-1">Gunakan ini hanya untuk dokumen yang tidak otomatis berulang.</p>
+      </div>
+      <button class="text-slate-400 hover:text-red-500 p-2" onclick="window.toggleManualChecklistForm(false)" type="button"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+      <input class="xl:col-span-2 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-blue-500 outline-none bg-white" id="newChecklistInput" placeholder="Uraian / Produk Dokumen" type="text"/>
+      <select class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-blue-500 outline-none bg-white" id="newChecklistFreq">
+        <option value="Harian">Harian</option>
+        <option selected="" value="Mingguan">Mingguan</option>
+        <option value="Bulanan">Bulanan</option>
+        <option value="One-Time">One-Time</option>
+      </select>
+      <input class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-blue-500 outline-none bg-white" id="newChecklistDate" type="date"/>
+      <input class="border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-blue-500 outline-none bg-white" id="newChecklistQty" placeholder="Qty" type="text"/>
+      <input class="md:col-span-1 xl:col-span-2 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-blue-500 outline-none bg-white" id="newChecklistNote" placeholder="Keterangan tambahan (opsional)" type="text"/>
+      <input class="md:col-span-1 xl:col-span-2 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-blue-500 outline-none bg-white" id="newChecklistDriveLink" placeholder="Link Drive Folder (opsional)" type="url"/>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2" onclick="window.addChecklistItem()" type="button">
+        <i class="fas fa-save"></i> Simpan Item
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="flex-1 min-h-0 overflow-auto custom-scrollbar relative rounded-lg border border-slate-100 bg-white pb-10">
+<table class="w-full text-left text-xs border-collapse">
+<thead class="bg-slate-100 text-slate-500 font-bold sticky top-0 z-10 shadow-sm uppercase tracking-wide">
+<tr>
+<th class="p-4 border-b border-slate-200 text-center w-10">
+                      No
+                    </th>
+<th class="p-4 border-b border-slate-200 w-1/3">
+                      Uraian / Produk
+                    </th>
+<th class="p-4 border-b border-slate-200 w-24">
+                      Frekuensi
+                    </th>
+<th class="p-4 border-b border-slate-200 w-32">Deadline</th>
+<th class="p-4 border-b border-slate-200 text-center w-16">
+                      Qty
+                    </th>
+<th class="p-4 border-b border-slate-200 text-center w-24">
+                      Status
+                    </th>
+<th class="p-4 border-b border-slate-200">Keterangan</th>
+<th class="p-4 border-b border-slate-200 w-10 text-center">
+<i class="fas fa-cog"></i>
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 bg-white" id="checklistContainer">
+<tr>
+<td class="p-12 text-center text-slate-400" colspan="8">
+<i class="fas fa-circle-notch fa-spin text-2xl"></i>
+                      Memuat data...
+                    </td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+
+
+<div class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center backdrop-blur-sm p-4" id="summaryModal">
+<div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-slate-200">
+<div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between sticky top-0 z-10">
+<h3 class="font-extrabold text-slate-900 flex items-center gap-2"><i class="fas fa-file-pen text-blue-600"></i> Edit Executive Summary</h3>
+<button class="text-slate-400 hover:text-red-500 p-2" onclick="window.closeSummaryModal()"><i class="fas fa-times"></i></button>
+</div>
+<div class="p-6 space-y-5">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Minggu Ke</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryMinggu" type="text"/></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nilai Kontrak</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryNilai" type="text"/></div>
+<div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nama Kegiatan</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryNama" type="text"/></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Lokasi Proyek</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryLokasi" type="text"/></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Pengguna Jasa</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryPengguna" type="text"/></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Konsultan MK</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryMK" type="text"/></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Kontraktor Pelaksana</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryKontraktor" type="text"/></div>
+<div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nomor Kontrak</label><input class="w-full border rounded-lg px-3 py-2 text-sm font-mono" id="summaryNoKontrak" type="text"/></div>
+</div>
+<div class="border rounded-xl overflow-hidden">
+<div class="px-4 py-3 bg-slate-50 flex items-center justify-between">
+<p class="text-xs font-extrabold text-slate-600 uppercase">Rincian Divisi Pekerjaan</p>
+<button class="text-xs font-bold text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50" onclick="window.addDivisionRow()"><i class="fas fa-plus mr-1"></i> Tambah Divisi</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-xs">
+<thead class="bg-slate-100 text-slate-500 uppercase"><tr><th class="p-3 text-left">Nama Divisi</th><th class="p-3 w-32">Bobot %</th><th class="p-3 w-32">Progress %</th><th class="p-3 w-16"></th></tr></thead>
+<tbody id="divisionRows"></tbody>
+</table>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Permasalahan <span class="normal-case font-normal">(satu item per baris)</span></label><textarea class="w-full border rounded-lg px-3 py-2 text-sm" id="summaryMasalah" rows="5"></textarea></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Solusi <span class="normal-case font-normal">(satu item per baris)</span></label><textarea class="w-full border rounded-lg px-3 py-2 text-sm" id="summarySolusi" rows="5"></textarea></div>
+</div>
+<div class="flex justify-end gap-3 pt-2 border-t">
+<button class="px-4 py-2 rounded-lg border text-sm font-bold text-slate-600" onclick="window.closeSummaryModal()">Batal</button>
+<button class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold" id="saveSummaryBtn" onclick="window.saveExecutiveSummary()"><i class="fas fa-save mr-1"></i> Simpan</button>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center backdrop-blur-sm p-4" id="phoModal">
+<div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
+<div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between"><h3 class="font-extrabold text-slate-900 flex items-center gap-2"><i class="fas fa-calendar-days text-blue-600"></i> Edit Tanggal Proyek</h3><button class="text-slate-400 hover:text-red-500 p-2" onclick="window.closePhoModal()"><i class="fas fa-times"></i></button></div>
+<div class="p-6 space-y-4">
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tanggal Mulai Kontrak</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="startDateInput" type="date"/></div>
+<div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tanggal PHO / Selesai</label><input class="w-full border rounded-lg px-3 py-2 text-sm" id="phoDateInput" type="date"/></div>
+<div class="flex justify-end gap-3 pt-2 border-t"><button class="px-4 py-2 rounded-lg border text-sm font-bold text-slate-600" onclick="window.closePhoModal()">Batal</button><button class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold" id="savePhoBtn" onclick="window.savePhoDates()"><i class="fas fa-save mr-1"></i> Simpan</button></div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/60 hidden z-[75] flex items-center justify-center backdrop-blur-sm p-4" id="sketchupLinkModal">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
+      <div>
+        <h3 class="font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fas fa-cube text-indigo-600"></i> Atur Link SketchUp / 3D
+        </h3>
+        <p class="text-xs text-slate-500 mt-1">Tempel link Google Drive preview, SketchUp, atau iframe-compatible link.</p>
+      </div>
+      <button class="text-slate-400 hover:text-red-500 p-2" onclick="window.closeSketchupLinkModal()" type="button"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2" for="sketchupLinkInput">Link SketchUp / 3D</label>
+        <input id="sketchupLinkInput" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400" placeholder="https://drive.google.com/file/d/.../view atau https://..." />
+        <p class="text-[11px] text-slate-500 mt-2 leading-5">
+          Untuk Google Drive, gunakan link file lalu pastikan akses file/folder minimal bisa dilihat oleh pengguna yang membuka dashboard.
+        </p>
+      </div>
+      <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-xs text-indigo-800 leading-5">
+        <b>Tips:</b> Link Google Drive seperti <code>/file/d/ID/view</code> akan otomatis diubah menjadi <code>/file/d/ID/preview</code> agar bisa tampil di iframe.
+      </div>
+      <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2 border-t">
+        <button class="px-4 py-2 rounded-lg border text-sm font-bold text-rose-600 hover:bg-rose-50" onclick="window.clearSketchupLink()" type="button">
+          <i class="fas fa-trash mr-1"></i> Hapus Link
+        </button>
+        <button class="px-4 py-2 rounded-lg border text-sm font-bold text-slate-600 hover:bg-slate-50" onclick="window.closeSketchupLinkModal()" type="button">Batal</button>
+        <button class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold" id="saveSketchupLinkBtn" onclick="window.saveSketchupLink()" type="button">
+          <i class="fas fa-save mr-1"></i> Simpan Link
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed inset-0 bg-black/60 hidden z-[75] flex items-center justify-center backdrop-blur-sm p-3 sm:p-5" id="weeklyArchiveModal">
+  <div class="weekly-archive-dialog bg-slate-50 rounded-3xl shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-hidden border border-white/60" style="background-color: #f8fafc !important;">
+    <div class="px-5 sm:px-7 py-4 border-b border-slate-200 bg-white flex items-start justify-between gap-4 sticky top-0 z-20 shadow-sm">
+      <div class="min-w-0">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-black tracking-[0.14em] uppercase text-indigo-700 mb-2">
+          <i class="fas fa-box-archive"></i> Arsip Mingguan
+        </div>
+        <h3 class="font-black text-slate-950 text-lg sm:text-xl leading-tight">Detail Arsip Mingguan</h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-5" id="weeklyArchiveModalSub">Snapshot proyek saat minggu ditutup.</p>
+      </div>
+      <button class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition" onclick="window.closeWeeklyArchiveModal()" type="button" aria-label="Tutup detail arsip"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-4 sm:p-6 space-y-5 overflow-y-auto max-h-[calc(92vh-104px)]" id="weeklyArchiveModalContent" style="background-color: #f8fafc !important;">
+      <div class="text-sm text-slate-400">Pilih arsip mingguan untuk melihat detail.</div>
+    </div>
+  </div>
+</div>
+
+<div class="archive-modal-backdrop fixed inset-0 hidden z-[76] flex items-center justify-center p-4" id="archiveConfirmModal" role="dialog" aria-modal="true">
+  <div class="archive-modal-card w-full max-w-2xl">
+    <div class="flex items-start gap-4">
+      <div class="archive-modal-icon">
+        <i class="fas fa-box-archive"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-indigo-600">Konfirmasi Arsip Mingguan</p>
+            <h3 class="text-xl font-black text-slate-950 mt-1">Tutup Minggu Aktif?</h3>
+          </div>
+          <button class="text-slate-400 hover:text-rose-500 p-2 rounded-xl hover:bg-slate-50 transition" onclick="window.closeArchiveConfirmModal()" type="button" aria-label="Tutup popup">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <p class="mt-3 text-sm leading-6 text-slate-600">
+          Periode <span id="archiveConfirmPeriod" class="font-extrabold text-indigo-700">-</span>
+          akan dikunci sebagai arsip read-only. Executive Summary, Kurva S, dan Checklist periode ini akan disimpan sebagai snapshot.
+        </p>
+
+        <div class="archive-stats-grid mt-5">
+          <div class="archive-stat-card"><span>Total Checklist</span><b id="archiveConfirmTotal">0</b></div>
+          <div class="archive-stat-card"><span>On Time</span><b class="text-emerald-600" id="archiveConfirmOnTime">0</b></div>
+          <div class="archive-stat-card"><span>Belum Ada / Telat</span><b class="text-rose-600" id="archiveConfirmLate">0</b></div>
+          <div class="archive-stat-card"><span>Pending</span><b class="text-amber-600" id="archiveConfirmPending">0</b></div>
+          <div class="archive-stat-card"><span>Progress Fisik</span><b id="archiveConfirmProgress">0%</b></div>
+          <div class="archive-stat-card"><span>Deviasi</span><b id="archiveConfirmDeviation">0%</b></div>
+        </div>
+
+        <div class="archive-modal-note mt-5">
+          <i class="fas fa-circle-info text-indigo-600 mt-0.5"></i>
+          <span>
+            Item yang sudah dicentang tetap menyimpan waktu dicentangnya. Item rutin dan template otomatis akan dibuat untuk minggu berikutnya setelah periode ini ditutup.
+          </span>
+        </div>
+
+        <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+          <button type="button" onclick="window.closeArchiveConfirmModal()" class="archive-btn-secondary">
+            Batal
+          </button>
+          <button type="button" id="confirmArchiveBtn" onclick="window.confirmArchiveCurrentWeek()" class="archive-btn-primary">
+            <i class="fas fa-check"></i>
+            Ya, Tutup Minggu
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center backdrop-blur-sm p-4" id="checklistTemplateModal">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto border border-slate-200">
+    <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between sticky top-0 z-10">
+      <div>
+        <h3 class="font-extrabold text-slate-900 flex items-center gap-2"><i class="fas fa-repeat text-indigo-600"></i> Atur Laporan Rutin Otomatis</h3>
+        <p class="text-xs text-slate-500 mt-1">Buat aturan sekali. Sistem akan membuat checklist harian, mingguan, atau bulanan secara otomatis.</p>
+      </div>
+      <button class="text-slate-400 hover:text-red-500 p-2" onclick="window.closeChecklistTemplateModal()" type="button"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-5 sm:p-6 space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,0.9fr),minmax(0,1.2fr)] gap-5 items-start">
+        <section class="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-5">
+          <div class="mb-4">
+            <p class="text-xs font-extrabold text-indigo-700 uppercase flex items-center gap-2"><i class="fas fa-plus"></i> Buat aturan baru</p>
+            <p class="text-xs text-slate-600 mt-2 leading-5">Contoh: isi <b>Laporan Harian</b>, pilih <b>Harian</b>, deadline <b>17:00</b>. Sistem akan membuat 7 item untuk Senin sampai Minggu.</p>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Nama dokumen</label>
+              <input id="templateNameInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" placeholder="Contoh: Laporan Harian" type="text" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Frekuensi</label>
+                <select id="templateFrequencyInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" onchange="window.onTemplateFrequencyChange()">
+                  <option value="Harian">Harian</option>
+                  <option selected value="Mingguan">Mingguan</option>
+                  <option value="Bulanan">Bulanan</option>
+                </select>
+              </div>
+              <div id="templateDueDayWrapper">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Hari deadline</label>
+                <select id="templateDueDayInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white">
+                  <option value="1">Senin</option>
+                  <option value="2">Selasa</option>
+                  <option value="3">Rabu</option>
+                  <option value="4">Kamis</option>
+                  <option selected value="5">Jumat</option>
+                  <option value="6">Sabtu</option>
+                  <option value="7">Minggu</option>
+                </select>
+              </div>
+              <div id="templateMonthDayWrapper" class="hidden">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal bulanan</label>
+                <input id="templateMonthDayInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" placeholder="Contoh: 25" min="1" max="31" type="number" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jam deadline</label>
+                <input id="templateDueTimeInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" type="time" value="17:00" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Qty</label>
+                <input id="templateQtyInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" placeholder="Qty" type="text" value="1" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Link Drive default</label>
+              <input id="templateDriveLinkInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" placeholder="Opsional: link folder laporan" type="url" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Keterangan default</label>
+              <input id="templateNoteInput" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:border-indigo-500 outline-none bg-white" placeholder="Opsional" type="text" />
+            </div>
+            <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2" onclick="window.saveChecklistTemplate()" type="button"><i class="fas fa-save"></i> Simpan Aturan</button>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 overflow-hidden bg-white">
+          <div class="px-4 py-4 bg-white border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p class="text-xs font-extrabold text-slate-600 uppercase">Daftar laporan rutin</p>
+              <p class="text-xs text-slate-500 mt-1">Yang aktif akan otomatis masuk ke checklist periode.</p>
+            </div>
+            <button class="text-xs font-bold text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl hover:bg-indigo-50" onclick="window.applyTemplatesToActivePeriod()" type="button"><i class="fas fa-wand-magic-sparkles mr-1"></i> Generate Periode Ini</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-500 uppercase">
+                <tr>
+                  <th class="p-3">Laporan</th>
+                  <th class="p-3">Jadwal</th>
+                  <th class="p-3">Qty</th>
+                  <th class="p-3">Aktif</th>
+                  <th class="p-3 text-center w-20">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="checklistTemplateRows" class="divide-y divide-slate-100 bg-white">
+                <tr><td colspan="5" class="p-8 text-center text-slate-400">Belum ada laporan rutin.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-600">
+        <div><b class="text-slate-800">Harian:</b> membuat 7 item, satu untuk tiap hari dalam periode minggu.</div>
+        <div><b class="text-slate-800">Mingguan:</b> membuat 1 item per minggu sesuai hari deadline.</div>
+        <div><b class="text-slate-800">Bulanan:</b> membuat item saat tanggal bulanan masuk dalam minggu tersebut.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fixed inset-0 bg-black/60 hidden z-[70] flex items-center justify-center backdrop-blur-sm p-4" id="sCurveModal">
+<div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-slate-200">
+<div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between sticky top-0 z-10"><h3 class="font-extrabold text-slate-900 flex items-center gap-2"><i class="fas fa-chart-area text-blue-600"></i> Input Manual Kurva S</h3><button class="text-slate-400 hover:text-red-500 p-2" onclick="window.closeSCurveModal()"><i class="fas fa-times"></i></button></div>
+<div class="p-6 space-y-4">
+<div class="flex items-center justify-between"><p class="text-xs text-slate-500">Isi Rencana dan Realisasi kumulatif per minggu.</p><button class="text-xs font-bold text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50" onclick="window.addSCurveRow()"><i class="fas fa-plus mr-1"></i> Tambah Minggu</button></div>
+<div class="overflow-x-auto border rounded-xl"><table class="w-full text-xs"><thead class="bg-slate-100 text-slate-500 uppercase"><tr><th class="p-3 text-left">Minggu</th><th class="p-3 w-40">Rencana %</th><th class="p-3 w-40">Realisasi %</th><th class="p-3 w-16"></th></tr></thead><tbody id="sCurveRows"></tbody></table></div>
+<div class="flex justify-end gap-3 pt-2 border-t"><button class="px-4 py-2 rounded-lg border text-sm font-bold text-slate-600" onclick="window.closeSCurveModal()">Batal</button><button class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold" id="saveSCurveBtn" onclick="window.saveSCurveData()"><i class="fas fa-save mr-1"></i> Simpan</button></div>
+</div>
+</div>
+</div>
+<script>
+      window.AppState = {
+        projectId: "project_001",
+        APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxovFmLB1tq-C9qvQvFS85lfO1nMby8fHxt5tc9U7eUVV8lDx5sDb4TTbMKCIXf0miGLg/exec",
+        projectStartDate: "2025-12-30",
+        phoEndDate: "2026-06-21",
+        pieColors: ["#f97316", "#eab308", "#a8a29e", "#3b82f6", "#8b5cf6", "#22c55e", "#ef4444", "#06b6d4", "#ec4899", "#10b981"],
+        execSummary: { minggu_ke: "0", nama: "-", lokasi: "-", pengguna: "-", mk: "-", kontraktor: "-", no_kontrak: "-", nilai: "Rp 0", divisi: [], masalah: [], solusi: [] },
+        sCurveData: [],
+        photos: [], filteredPhotos: [], currentPhotoIndex: 0, videos: [], currentVideoIndex: 0, sketchups: [], currentSketchupIndex: 0, activeMedia: "photo", media: {},
+        checklistPeriods: {}, checklistActivePeriodKey: "", checklistTemplates: [], weeklyArchives: {}, countdownTimer: null,
+      };
+      window.currentUserRole = "viewer";
+      window.sCurveChartInstance = null;
+      window.divisionPieChartInstance = null;
+
+      window.toggleSidebar = () => {
+        document.getElementById("sidebar")?.classList.toggle("-translate-x-full");
+        document.getElementById("sidebarOverlay")?.classList.toggle("hidden");
+      };
+      window.setText = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value ?? "-"; };
+      window.safeShow = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove("hidden");
+        else {
+          console.warn(`Element #${id} tidak ditemukan.`);
+          alert(`Komponen ${id} belum ada di halaman. Pastikan dashboard.html versi terbaru sudah ter-deploy dan lakukan hard refresh.`);
+        }
+      };
+      window.safeHide = (id) => { const el = document.getElementById(id); if (el) el.classList.add("hidden"); };
+      window.requireAdmin = () => { if (window.currentUserRole !== "admin") { alert("Akses ditolak. Hanya admin yang dapat mengubah data."); return false; } return true; };
+      window.toNumber = (value) => {
+        const raw = String(value ?? "").trim();
+        if (!raw || /^[-–—]+$/.test(raw)) return null;
+        let cleaned = raw.replace(/\s+/g, "").replace(/%/g, "");
+        const hasComma = cleaned.includes(",");
+        const hasDot = cleaned.includes(".");
+        if (hasComma && hasDot) cleaned = cleaned.lastIndexOf(",") > cleaned.lastIndexOf(".") ? cleaned.replace(/\./g, "").replace(",", ".") : cleaned.replace(/,/g, "");
+        else if (hasComma) cleaned = cleaned.replace(",", ".");
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : null;
+      };
+      window.getLocalISODate = (dateObj) => {
+        const tzOffset = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffset).toISOString().slice(0, 10);
+      };
+      window.isoWeekKeyFromDate = (date = new Date()) => {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return `week-${d.getUTCFullYear()}-W${String(Math.ceil(((d - yearStart) / 86400000 + 1) / 7)).padStart(2, "0")}`;
+      };
+      window.isoWeekLabel = (key) => { const m = /^week-(\d{4})-W(\d{2})$/.exec(key || ""); return m ? `${m[1]} • Minggu ${m[2]}` : key || "-"; };
+      window.dateFromISOWeekKey = (key) => {
+        const m = /^week-(\d{4})-W(\d{2})$/.exec(key || "");
+        if (!m) return new Date();
+        const year = Number(m[1]); const week = Number(m[2]);
+        const jan4 = new Date(Date.UTC(year, 0, 4));
+        const day = jan4.getUTCDay() || 7;
+        jan4.setUTCDate(jan4.getUTCDate() - day + 1 + (week - 1) * 7);
+        return new Date(jan4.getUTCFullYear(), jan4.getUTCMonth(), jan4.getUTCDate());
+      };
+      window.nextWeekKey = (key) => { const d = window.dateFromISOWeekKey(key); d.setDate(d.getDate() + 7); return window.isoWeekKeyFromDate(d); };
+      window.normalizeDateInputValue = (val) => {
+        if (!val) return "";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+        const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(val);
+        if (!m) return "";
+        return `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
+      };
+      window.endOfDayMs = (dateStr) => {
+        if (!dateStr) return null;
+        const p = dateStr.split("-").map(Number);
+        if (p.length !== 3 || p.some(Number.isNaN)) return null;
+        return new Date(p[0], p[1] - 1, p[2], 23, 59, 59, 999).getTime();
+      };
+      window.deadlineMs = (item = {}) => {
+        if (!item.deadline) return null;
+        const p = String(item.deadline).split("-").map(Number);
+        if (p.length !== 3 || p.some(Number.isNaN)) return null;
+        const rawTime = String(item.deadlineTime || "").trim();
+        const m = /^(\d{1,2}):(\d{2})$/.exec(rawTime);
+        if (!m) return window.endOfDayMs(item.deadline);
+        const hour = Math.min(23, Math.max(0, Number(m[1])));
+        const minute = Math.min(59, Math.max(0, Number(m[2])));
+        return new Date(p[0], p[1] - 1, p[2], hour, minute, 59, 999).getTime();
+      };
+      window.addDays = (date, days) => { const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()); d.setDate(d.getDate() + days); return d; };
+      window.weekRangeFromKey = (key) => {
+        const start = window.dateFromISOWeekKey(key);
+        return { start, end: window.addDays(start, 6) };
+      };
+
+      window.normalizeSCurveData = (data) => {
+        const rawRows = Array.isArray(data) ? data : [];
+        const extractWeekNumber = (value, fallback) => {
+          const match = String(value ?? "").match(/\d+/);
+          const num = match ? Number(match[0]) : Number(fallback || 0);
+          return Number.isFinite(num) && num > 0 ? num : null;
+        };
+        const clampPercent = (value) => {
+          if (!Number.isFinite(value)) return null;
+          return Math.max(0, Math.min(100, Number(Number(value).toFixed(4))));
+        };
+        const asNumber = (value) => window.toNumber ? window.toNumber(value) : (Number.isFinite(Number(value)) ? Number(value) : null);
+
+        const rows = rawRows
+          .map((row, idx) => {
+            const weekRaw = row.week ?? row.minggu ?? row.Minggu ?? row.MINGGU ?? row.label ?? idx + 1;
+            const weekNum = window.getSCurveWeekNumber ? window.getSCurveWeekNumber(weekRaw, idx + 1) : extractWeekNumber(weekRaw, idx + 1);
+            const plannedRaw = asNumber(row.planned ?? row.rencana ?? row.Rencana ?? row.RENCANA ?? row.plan);
+            const actualRaw = asNumber(row.actual ?? row.realisasi ?? row.Realisasi ?? row.REALISASI ?? row.actualProgress);
+            return { weekNum, planned: plannedRaw, actual: actualRaw };
+          })
+          .filter((row) => row.weekNum && (row.planned !== null || row.actual !== null));
+
+        const maxVal = Math.max(0, ...rows.flatMap((r) => [r.planned, r.actual]).filter((n) => Number.isFinite(n)));
+        if (maxVal > 0 && maxVal < 1.5) {
+          rows.forEach((r) => {
+            if (r.planned !== null) r.planned *= 100;
+            if (r.actual !== null) r.actual *= 100;
+          });
+        }
+
+        // Merge duplicate week labels so Chart.js never draws vertical lines for repeated M labels.
+        const byWeek = new Map();
+        rows.forEach((row) => {
+          const weekNum = Number(row.weekNum);
+          if (!Number.isFinite(weekNum) || weekNum <= 0) return;
+          const planned = clampPercent(row.planned);
+          const actual = clampPercent(row.actual);
+          if (!byWeek.has(weekNum)) {
+            byWeek.set(weekNum, { week: String(weekNum), weekNum, planned, actual });
+            return;
+          }
+          const existing = byWeek.get(weekNum);
+          const chooseValue = (current, incoming) => {
+            const cur = clampPercent(current);
+            const inc = clampPercent(incoming);
+            if (cur === null) return inc;
+            if (inc === null) return cur;
+            // Ignore accidental 100% cells duplicated into an earlier week.
+            if (cur >= 90 && inc < 80) return inc;
+            if (inc >= 90 && cur < 80) return cur;
+            return inc;
+          };
+          existing.planned = chooseValue(existing.planned, planned);
+          existing.actual = chooseValue(existing.actual, actual);
+        });
+
+        const sortedRows = Array.from(byWeek.values()).sort((a, b) => a.weekNum - b.weekNum);
+
+        const removeSpikes = (values, options = {}) => {
+          const cleaned = values.map((v) => (Number.isFinite(v) ? Number(v) : null));
+          for (let i = 0; i < cleaned.length; i++) {
+            const current = cleaned[i];
+            if (!Number.isFinite(current)) continue;
+            const prev = i > 0 ? cleaned[i - 1] : null;
+            const next = i < cleaned.length - 1 ? cleaned[i + 1] : null;
+            const hasPrev = Number.isFinite(prev);
+            const hasNext = Number.isFinite(next);
+            const notFinalPoint = i < cleaned.length - 1;
+            const isEarlyOrMiddle = i < cleaned.length - 2;
+
+            // Typical broken CSV/import pattern: M1=0, M2=100, M3=0.
+            const isolatedHundred =
+              hasNext &&
+              notFinalPoint &&
+              current >= 90 &&
+              (!hasPrev || current - prev >= 25) &&
+              next < current - 20 &&
+              isEarlyOrMiddle;
+
+            // Generic local peak that immediately falls again.
+            const localPeak =
+              hasPrev &&
+              hasNext &&
+              isEarlyOrMiddle &&
+              current > Math.max(prev, next) + 35 &&
+              next < current - 25;
+
+            // Planned values are expected to be smooth cumulative values. Treat sharp drops after a high value as import noise.
+            const plannedSpike =
+              options.series === "planned" &&
+              hasNext &&
+              isEarlyOrMiddle &&
+              current >= 80 &&
+              next < current - 15 &&
+              (!hasPrev || current > prev + 20);
+
+            if (isolatedHundred || localPeak || plannedSpike) cleaned[i] = null;
+          }
+          return cleaned;
+        };
+
+        const interpolate = (values, idx) => {
+          let left = idx - 1;
+          while (left >= 0 && !Number.isFinite(values[left])) left--;
+          let right = idx + 1;
+          while (right < values.length && !Number.isFinite(values[right])) right++;
+          if (left >= 0 && right < values.length) {
+            const leftWeek = sortedRows[left].weekNum || left + 1;
+            const rightWeek = sortedRows[right].weekNum || right + 1;
+            const currentWeek = sortedRows[idx].weekNum || idx + 1;
+            const ratio = (currentWeek - leftWeek) / Math.max(1, rightWeek - leftWeek);
+            return values[left] + (values[right] - values[left]) * ratio;
+          }
+          if (left >= 0) return values[left];
+          if (right < values.length) return values[right];
+          return null;
+        };
+
+        // Clean planned curve: fill missing values and force cumulative non-decreasing S-curve.
+        const plannedValues = removeSpikes(sortedRows.map((row) => row.planned ?? 0), { series: "planned" });
+        for (let i = 0; i < plannedValues.length; i++) {
+          if (!Number.isFinite(plannedValues[i])) plannedValues[i] = interpolate(plannedValues, i) ?? 0;
+        }
+        let lastPlanned = 0;
+        sortedRows.forEach((row, idx) => {
+          const value = clampPercent(plannedValues[idx]) ?? 0;
+          lastPlanned = Math.max(lastPlanned, value);
+          row.planned = Number(lastPlanned.toFixed(4));
+        });
+
+        // Clean actual curve: keep future blanks as null, remove isolated spikes, then prevent cumulative regression.
+        const actualValues = removeSpikes(sortedRows.map((row) => row.actual), { series: "actual" });
+        let lastActual = null;
+        sortedRows.forEach((row, idx) => {
+          const value = clampPercent(actualValues[idx]);
+          if (value === null) {
+            row.actual = null;
+          } else {
+            lastActual = lastActual === null ? value : Math.max(lastActual, value);
+            row.actual = Number(lastActual.toFixed(4));
+          }
+          delete row.weekNum;
+        });
+
+        return sortedRows.map((row) => ({
+          week: String(row.week).replace(/^M/i, ""),
+          planned: row.planned ?? 0,
+          actual: row.actual,
+        }));
+      };
+      window.parseSCurveCSVText = (text) => {
+        const source = String(text || "").replace(/^\uFEFF/, "");
+        if (!source.trim()) return [];
+        const delimiter = (source.match(/;/g) || []).length > (source.match(/,/g) || []).length ? ";" : ",";
+        const rows = (window.Papa ? Papa.parse(source, { delimiter, skipEmptyLines: false }).data : window.simpleCSVRows(source, delimiter)) || [];
+        const norm = (v) => String(v ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+        const rowText = (row) => (row || []).map(norm).join(" ");
+        const findBestRow = (keyword) => rows.find((row) => rowText(row).includes(`KOMULATIF ${keyword}`)) || rows.find((row) => rowText(row).includes(keyword));
+        const weekRow = rows.find((row) => (row || []).some((cell) => /^\s*M\s*-?\s*\d+\s*$/i.test(String(cell || ""))));
+        const planRow = findBestRow("RENCANA");
+        const actualRow = findBestRow("REALISASI");
+        if (planRow || actualRow) {
+          const maxCols = Math.max(planRow?.length || 0, actualRow?.length || 0, weekRow?.length || 0);
+          const out = []; let fallbackWeek = 1;
+          for (let col = 0; col < maxCols; col++) {
+            const planned = planRow ? window.toNumber(planRow[col]) : null;
+            const actual = actualRow ? window.toNumber(actualRow[col]) : null;
+            if (planned === null && actual === null) continue;
+            const rawWeek = String(weekRow?.[col] ?? "").trim();
+            const weekMatch = rawWeek.match(/M\s*-?\s*(\d+)/i);
+            out.push({ week: weekMatch ? weekMatch[1] : String(fallbackWeek++), planned: planned ?? 0, actual: actual });
+          }
+          return window.normalizeSCurveData(out);
+        }
+        const parsed = window.Papa ? Papa.parse(source, { delimiter, header: true, skipEmptyLines: true, transformHeader: (h) => String(h || "").trim().toLowerCase() }) : null;
+        const records = parsed ? parsed.data : [];
+        return window.normalizeSCurveData(records.map((row, idx) => ({ week: row.minggu ?? row.week ?? idx + 1, planned: row.rencana ?? row.planned ?? row.plan, actual: row.realisasi ?? row.actual })));
+      };
+      window.renderChartFromJSON = (data) => {
+        const rows = window.normalizeSCurveData(data);
+        window.AppState.sCurveData = rows;
+        const canvas = document.getElementById("sCurveChart");
+        if (!canvas || typeof Chart === "undefined") return;
+        if (window.sCurveChartInstance) window.sCurveChartInstance.destroy();
+        window.sCurveChartInstance = new Chart(canvas, {
+          type: "line",
+          data: { labels: rows.map((d) => `M${d.week}`), datasets: [
+            { label: "Rencana", data: rows.map((d) => d.planned), borderWidth: 2, borderDash: [6, 4], tension: 0.25, pointRadius: 2 },
+            { label: "Realisasi", data: rows.map((d) => d.actual), borderWidth: 4, tension: 0.25, pointRadius: 3 },
+          ] },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { position: "bottom" } } },
+        });
+      };
+      window.generateInsight = () => {
+        const rows = window.normalizeSCurveData(window.AppState.sCurveData);
+        const last = [...rows].reverse().find((r) => Number.isFinite(r.actual) && r.actual > 0) || rows[rows.length - 1];
+        const planned = Number(last?.planned || 0);
+        const actual = last?.actual === null ? 0 : Number(last?.actual || 0);
+        const dev = actual - planned;
+        window.setText("progressVal", `${actual.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%`);
+        window.setText("deviasiVal", `${dev.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%`);
+        window.setText("deviasiText", dev >= 0 ? "LEBIH CEPAT / ON TRACK" : "TERLAMBAT");
+        const devEl = document.getElementById("deviasiVal");
+        if (devEl) { devEl.classList.toggle("text-rose-600", dev < 0); devEl.classList.toggle("text-emerald-600", dev >= 0); }
+        return { week: last?.week || "-", planned, actual, deviation: dev };
+      };
+      window.renderSCurve = () => { window.renderChartFromJSON(window.AppState.sCurveData); window.generateInsight(); };
+
+      window.ensureExecutiveExtraUI = () => {};
+      window.normalizeDivision = (d) => typeof d === "string" ? { nama: d, bobot: 0, progress: 0 } : { nama: d?.nama || d?.name || "-", bobot: window.toNumber(d?.bobot ?? d?.weight) ?? 0, progress: window.toNumber(d?.progress ?? d?.progres) ?? 0 };
+      window.renderExecutiveSummary = () => {
+        const s = window.AppState.execSummary || {};
+        window.setText("sumMingguKe", `MINGGU KE - ${s.minggu_ke || "0"}`);
+        window.setText("sumNama", s.nama || "-"); window.setText("sumLokasi", s.lokasi || "-"); window.setText("sumPengguna", s.pengguna || "-"); window.setText("sumMK", s.mk || "-"); window.setText("sumKontraktor", s.kontraktor || "-"); window.setText("sumNoKontrak", s.no_kontrak || "-"); window.setText("sumNilai", s.nilai || "Rp 0");
+        const divisi = (Array.isArray(s.divisi) ? s.divisi : []).map(window.normalizeDivision);
+        const tbody = document.getElementById("divisionSummaryRows"); const foot = document.getElementById("divisionSummaryFoot");
+        if (tbody) tbody.innerHTML = divisi.length ? divisi.map((d) => `<tr class="align-top"><td class="py-3 pr-3 text-slate-800 font-medium">${d.nama}</td><td class="py-3 px-3 text-right text-slate-700 font-semibold">${d.bobot.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</td><td class="py-3 pl-3 text-right text-slate-700 font-semibold">${d.progress.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</td></tr>`).join("") : `<tr><td colspan="3" class="py-6 text-center text-slate-400">Belum ada rincian divisi.</td></tr>`;
+        const totalBobot = divisi.reduce((sum, d) => sum + d.bobot, 0); const totalProgress = divisi.reduce((sum, d) => sum + (d.bobot * d.progress / 100), 0);
+        if (foot) foot.innerHTML = `<tr><td class="pt-4 pr-3">TOTAL</td><td class="pt-4 px-3 text-right">${totalBobot.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</td><td class="pt-4 pl-3 text-right">${totalProgress.toLocaleString("id-ID", { maximumFractionDigits: 2 })}% tertimbang</td></tr>`;
+        const list = (id, arr, emptyText) => { const el = document.getElementById(id); if (el) el.innerHTML = (arr || []).length ? arr.map((x) => `<li class="leading-6">${x}</li>`).join("") : `<li class="list-none text-slate-400 pl-0">${emptyText}</li>`; };
+        list("summaryMasalahList", s.masalah, "Belum ada catatan permasalahan."); list("summarySolusiList", s.solusi, "Belum ada rencana solusi.");
+        const pieCanvas = document.getElementById("divisionPieChart");
+        if (pieCanvas && typeof Chart !== "undefined") {
+          if (window.divisionPieChartInstance) window.divisionPieChartInstance.destroy();
+          const labels = divisi.length ? divisi.map((d) => d.nama) : ["Belum ada data"]; const data = divisi.length ? divisi.map((d) => d.bobot) : [1]; const colors = divisi.length ? divisi.map((_, i) => window.AppState.pieColors[i % window.AppState.pieColors.length]) : ["#cbd5e1"];
+          window.divisionPieChartInstance = new Chart(pieCanvas, { type: "pie", data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#ffffff", borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { boxWidth: 14, usePointStyle: true, pointStyle: "circle", padding: 16 } } } } });
+        }
+      };
+      window.renderTimeSummary = () => {
+        const start = new Date(window.AppState.projectStartDate); const end = new Date(window.AppState.phoEndDate); const now = new Date(); const oneDay = 86400000;
+        const total = Math.max(0, Math.ceil((end - start) / oneDay)); const used = Math.max(0, Math.min(total, Math.ceil((now - start) / oneDay))); const remain = Math.max(0, Math.ceil((end - now) / oneDay)); const percent = total > 0 ? (used / total) * 100 : 0;
+        window.setText("lblStartDate", window.AppState.projectStartDate || "-"); window.setText("timeTotal", total); window.setText("timeUsed", used); window.setText("timeRemain", remain); window.setText("countdownDays", remain); window.setText("timePercent", percent.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      };
+      window.renderAllProjectViews = () => { window.renderExecutiveSummary(); window.renderTimeSummary(); window.renderSCurve(); window.renderChecklistPeriodSelector(); window.renderChecklist(); window.renderWeeklyArchivePanel(); };
+      window.downloadTemplate = () => {
+        const csv = "Minggu,Rencana,Realisasi\n1,2.5,2.0\n2,5.0,4.2\n3,8.0,7.5\n";
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "template-kurva-s.csv"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      };
+      window.addSCurveRow = (row = {}) => {
+        const tbody = document.getElementById("sCurveRows"); if (!tbody) return;
+        const tr = document.createElement("tr");
+        const index = tbody.children.length + 1;
+        tr.innerHTML = `<td class="p-2"><input class="sc-week w-full border rounded px-2 py-1" value="${row.week ?? index}" /></td><td class="p-2"><input class="sc-planned w-full border rounded px-2 py-1 text-right" value="${row.planned ?? 0}" /></td><td class="p-2"><input class="sc-actual w-full border rounded px-2 py-1 text-right" value="${row.actual ?? ""}" /></td><td class="p-2 text-center"><button onclick="this.closest('tr').remove()" class="text-rose-500"><i class="fas fa-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+      };
+      window.openSCurveModal = () => { const tbody = document.getElementById("sCurveRows"); if (tbody) { tbody.innerHTML = ""; (window.AppState.sCurveData.length ? window.AppState.sCurveData : [{ week: 1, planned: 0, actual: null }]).forEach(window.addSCurveRow); } window.safeShow("sCurveModal"); };
+      window.closeSCurveModal = () => window.safeHide("sCurveModal");
+      window.addDivisionRow = (row = {}) => {
+        const tbody = document.getElementById("divisionRows"); if (!tbody) return;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td class="p-2"><input class="div-name w-full border rounded px-2 py-1" value="${row.nama || row.name || ""}" /></td><td class="p-2"><input class="div-weight w-full border rounded px-2 py-1 text-right" value="${row.bobot ?? row.weight ?? 0}" /></td><td class="p-2"><input class="div-progress w-full border rounded px-2 py-1 text-right" value="${row.progress ?? row.progres ?? 0}" /></td><td class="p-2 text-center"><button onclick="this.closest('tr').remove()" class="text-rose-500"><i class="fas fa-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+      };
+      window.openSummaryModal = () => {
+        const s = window.AppState.execSummary || {}; const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ""; };
+        setVal("summaryMinggu", s.minggu_ke); setVal("summaryNama", s.nama); setVal("summaryLokasi", s.lokasi); setVal("summaryPengguna", s.pengguna); setVal("summaryMK", s.mk); setVal("summaryKontraktor", s.kontraktor); setVal("summaryNoKontrak", s.no_kontrak); setVal("summaryNilai", s.nilai); setVal("summaryMasalah", (s.masalah || []).join("\n")); setVal("summarySolusi", (s.solusi || []).join("\n"));
+        const tbody = document.getElementById("divisionRows"); if (tbody) { tbody.innerHTML = ""; ((s.divisi || []).length ? s.divisi.map(window.normalizeDivision) : [{ nama: "", bobot: 0, progress: 0 }]).forEach(window.addDivisionRow); }
+        window.safeShow("summaryModal");
+      };
+      window.closeSummaryModal = () => window.safeHide("summaryModal");
+      window.openPhoModal = () => { const start = document.getElementById("startDateInput"); const pho = document.getElementById("phoDateInput"); if (start) start.value = window.AppState.projectStartDate || ""; if (pho) pho.value = window.AppState.phoEndDate || ""; window.safeShow("phoModal"); };
+      window.closePhoModal = () => window.safeHide("phoModal");
+
+      window.computeItemStatus = (item, nowMs = Date.now()) => {
+        const dueMs = window.deadlineMs(item);
+        if (item.checkedAt) return item.late || (dueMs && item.checkedAt > dueMs) ? "TELAT" : "ON_TIME";
+        if (dueMs && nowMs > dueMs) return "BELUM_ADA";
+        return "PENDING";
+      };
+      window.escapeHtml = (value = "") => String(value ?? "").replace(/[&<>'"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[ch]));
+      window.formatDateTimeID = (value) => {
+        if (!value) return "-";
+        const d = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(d.getTime())) return "-";
+        return d.toLocaleString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      };
+      window.formatDeadlineDateTime = (item = {}) => {
+        if (!item.deadline) return "-";
+        const p = String(item.deadline).split("-").map(Number);
+        if (p.length !== 3 || p.some(Number.isNaN)) return window.escapeHtml(item.deadline || "-");
+        const rawTime = String(item.deadlineTime || "23:59").trim();
+        const m = /^(\d{1,2}):(\d{2})$/.exec(rawTime);
+        const hour = m ? Math.min(23, Math.max(0, Number(m[1]))) : 23;
+        const minute = m ? Math.min(59, Math.max(0, Number(m[2]))) : 59;
+        return new Date(p[0], p[1] - 1, p[2], hour, minute).toLocaleString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      };
+      window.getDurationLabelID = (ms = 0) => {
+        const totalMinutes = Math.max(0, Math.round(Number(ms || 0) / 60000));
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        const minutes = totalMinutes % 60;
+        const parts = [];
+        if (days) parts.push(`${days} hari`);
+        if (hours) parts.push(`${hours} jam`);
+        if (minutes || !parts.length) parts.push(`${minutes} menit`);
+        return parts.slice(0, 3).join(" ");
+      };
+      window.getChecklistStatusMeta = (item = {}, nowMs = Date.now()) => {
+        const st = window.computeItemStatus(item, nowMs);
+        const dueMs = window.deadlineMs(item);
+        const deadlineLabel = window.formatDeadlineDateTime(item);
+        const checkedLabel = item.checkedAt ? window.formatDateTimeID(item.checkedAt) : "-";
+        const base = {
+          status: st,
+          checkedLabel,
+          deadlineLabel,
+          timingTitle: "Belum dicentang",
+          timingDetail: item.deadline ? `Deadline: ${deadlineLabel}` : "Deadline belum ditentukan",
+          timingNote: item.deadline ? `Belum dicentang • Deadline: ${deadlineLabel}` : "Belum dicentang",
+        };
+        if (st === "ON_TIME") {
+          const earlyText = dueMs && item.checkedAt ? `Selesai ${window.getDurationLabelID(dueMs - item.checkedAt)} sebelum deadline` : "Dicentang tepat waktu";
+          return {
+            ...base,
+            label: "ON TIME",
+            badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+            timingTitle: `Dicentang: ${checkedLabel}`,
+            timingDetail: earlyText,
+            timingNote: `Dicentang: ${checkedLabel} • ${earlyText}`,
+          };
+        }
+        if (st === "TELAT") {
+          const lateText = dueMs && item.checkedAt ? `Terlambat ${window.getDurationLabelID(item.checkedAt - dueMs)}` : "Dicentang setelah deadline";
+          return {
+            ...base,
+            label: "TELAT",
+            badgeClass: "bg-rose-50 text-rose-700 border border-rose-100",
+            timingTitle: `Dicentang: ${checkedLabel}`,
+            timingDetail: `${lateText} • Deadline: ${deadlineLabel}`,
+            timingNote: `Dicentang: ${checkedLabel} • ${lateText} • Deadline: ${deadlineLabel}`,
+          };
+        }
+        if (st === "BELUM_ADA") {
+          return {
+            ...base,
+            label: "BELUM ADA",
+            badgeClass: "bg-amber-50 text-amber-700 border border-amber-100",
+            timingTitle: "Belum dicentang",
+            timingDetail: `Melewati deadline: ${deadlineLabel}`,
+            timingNote: `Belum dicentang sampai deadline: ${deadlineLabel}`,
+          };
+        }
+        return {
+          ...base,
+          label: "PENDING",
+          badgeClass: "bg-slate-50 text-slate-600 border border-slate-100",
+          timingTitle: "Belum dicentang",
+          timingDetail: item.deadline ? `Menunggu sampai deadline: ${deadlineLabel}` : "Deadline belum ditentukan",
+          timingNote: item.deadline ? `Belum dicentang • Deadline: ${deadlineLabel}` : "Belum dicentang",
+        };
+      };
+      window.isLateLikeStatus = (status) => status === "TELAT" || status === "BELUM_ADA";
+      window.dayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+      window.templateDeadlineLabel = (tpl = {}) => {
+        const time = tpl.dueTime ? ` ${tpl.dueTime}` : "";
+        if (tpl.frequency === "Harian") return `Setiap hari${time}`;
+        if (tpl.frequency === "Bulanan") return `Tanggal ${tpl.monthDay || "-"}${time}`;
+        return `${window.dayNames[(Number(tpl.dueDay || 5) - 1 + 7) % 7]}${time}`;
+      };
+      window.normalizeDriveLink = (link = "") => String(link || "").trim();
+      window.onTemplateFrequencyChange = () => {
+        const freq = document.getElementById("templateFrequencyInput")?.value;
+        const dueDay = document.getElementById("templateDueDayInput");
+        const monthDay = document.getElementById("templateMonthDayInput");
+        const dueDayWrapper = document.getElementById("templateDueDayWrapper");
+        const monthDayWrapper = document.getElementById("templateMonthDayWrapper");
+        if (dueDay) dueDay.classList.toggle("hidden", freq !== "Mingguan");
+        if (monthDay) monthDay.classList.toggle("hidden", freq !== "Bulanan");
+        if (dueDayWrapper) dueDayWrapper.classList.toggle("hidden", freq !== "Mingguan");
+        if (monthDayWrapper) monthDayWrapper.classList.toggle("hidden", freq !== "Bulanan");
+      };
+      window.toggleManualChecklistForm = (force) => {
+        const form = document.getElementById("manualChecklistForm");
+        if (!form) return;
+        const show = typeof force === "boolean" ? force : form.classList.contains("hidden");
+        form.classList.toggle("hidden", !show);
+        if (show) setTimeout(() => document.getElementById("newChecklistInput")?.focus(), 50);
+      };
+      window.openChecklistTemplateModal = () => { if (!window.requireAdmin()) return; window.renderChecklistTemplates(); window.onTemplateFrequencyChange(); window.safeShow("checklistTemplateModal"); };
+      window.closeChecklistTemplateModal = () => window.safeHide("checklistTemplateModal");
+      window.resetChecklistTemplateForm = () => {
+        const values = { templateNameInput: "", templateFrequencyInput: "Mingguan", templateDueDayInput: "5", templateMonthDayInput: "25", templateDueTimeInput: "17:00", templateQtyInput: "1", templateDriveLinkInput: "", templateNoteInput: "" };
+        Object.entries(values).forEach(([id, value]) => { const el = document.getElementById(id); if (el) el.value = value; });
+        window.onTemplateFrequencyChange();
+      };
+      window.updateChecklistTemplateCount = () => {
+        const el = document.getElementById("checklistTemplateCount");
+        if (el) el.innerText = String((window.AppState.checklistTemplates || []).filter((tpl) => tpl.active !== false).length);
+      };
+      window.renderChecklistTemplates = () => {
+        window.updateChecklistTemplateCount();
+        const tbody = document.getElementById("checklistTemplateRows");
+        if (!tbody) return;
+        const templates = window.AppState.checklistTemplates || [];
+        if (!templates.length) { tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Belum ada laporan rutin.</td></tr>`; return; }
+        tbody.innerHTML = templates.map((tpl) => {
+          const active = tpl.active !== false;
+          const safeName = window.escapeHtml(tpl.name || "-");
+          const safeNote = tpl.notes ? `<div class="text-[11px] text-slate-400 mt-1">${window.escapeHtml(tpl.notes)}</div>` : "";
+          const drive = tpl.driveLink ? `<div class="mt-2"><a href="${window.escapeHtml(tpl.driveLink)}" target="_blank" rel="noopener" class="text-[11px] font-bold text-blue-600 hover:underline"><i class="fab fa-google-drive mr-1"></i>Buka Drive</a></div>` : "";
+          return `<tr class="align-top ${active ? "" : "bg-slate-50 opacity-70"}">
+            <td class="p-3 font-bold text-slate-800">${safeName}${safeNote}${drive}</td>
+            <td class="p-3 text-slate-700"><span class="px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-bold mr-1">${window.escapeHtml(tpl.frequency || "-")}</span><div class="mt-1">${window.escapeHtml(window.templateDeadlineLabel(tpl))}</div></td>
+            <td class="p-3 text-slate-700">${window.escapeHtml(tpl.qty || "-")}</td>
+            <td class="p-3"><button onclick="window.toggleChecklistTemplate('${tpl.id}')" class="text-[11px] font-bold px-3 py-1.5 rounded-xl border ${active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-500"}" type="button">${active ? "Aktif" : "Nonaktif"}</button></td>
+            <td class="p-3 text-center"><button onclick="window.deleteChecklistTemplate('${tpl.id}')" class="text-rose-500 hover:text-rose-700 px-2 py-1" type="button"><i class="fas fa-trash"></i></button></td>
+          </tr>`;
+        }).join("");
+      };
+      window.saveChecklistTemplate = async () => {
+        if (!window.requireAdmin()) return;
+        const name = document.getElementById("templateNameInput")?.value.trim();
+        const frequency = document.getElementById("templateFrequencyInput")?.value || "Mingguan";
+        const driveLink = window.normalizeDriveLink(document.getElementById("templateDriveLinkInput")?.value);
+        if (!name) return alert("Nama template wajib diisi.");
+        if (driveLink && !/^https?:\/\//i.test(driveLink)) return alert("Link Drive harus diawali http:// atau https://");
+        const tpl = {
+          id: `tpl-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          name,
+          frequency,
+          dueDay: Number(document.getElementById("templateDueDayInput")?.value || 5),
+          monthDay: Math.min(31, Math.max(1, Number(document.getElementById("templateMonthDayInput")?.value || 25))),
+          dueTime: document.getElementById("templateDueTimeInput")?.value || "17:00",
+          qty: document.getElementById("templateQtyInput")?.value.trim() || "1",
+          notes: document.getElementById("templateNoteInput")?.value.trim() || "",
+          driveLink,
+          active: true,
+          createdAt: Date.now()
+        };
+        window.AppState.checklistTemplates.unshift(tpl);
+        window.resetChecklistTemplateForm();
+        window.renderChecklistTemplates();
+        const added = window.generateTemplateItemsForPeriod(window.AppState.checklistActivePeriodKey);
+        window.renderChecklist();
+        await window.persistChecklist();
+        alert(added ? "Aturan disimpan dan checklist periode aktif dibuat." : "Aturan disimpan.");
+      };
+      window.toggleChecklistTemplate = async (id) => {
+        if (!window.requireAdmin()) return;
+        const tpl = (window.AppState.checklistTemplates || []).find((x) => x.id === id);
+        if (!tpl) return;
+        tpl.active = tpl.active === false;
+        window.renderChecklistTemplates();
+        await window.persistChecklist();
+      };
+      window.deleteChecklistTemplate = async (id) => {
+        if (!window.requireAdmin()) return;
+        if (!confirm("Hapus aturan laporan rutin ini? Item checklist yang sudah pernah dibuat tidak akan ikut terhapus.")) return;
+        window.AppState.checklistTemplates = (window.AppState.checklistTemplates || []).filter((x) => x.id !== id);
+        window.renderChecklistTemplates();
+        await window.persistChecklist();
+      };
+      window.buildTemplateItemsForPeriod = (weekKey, tpl) => {
+        if (!weekKey || !tpl || tpl.active === false) return [];
+        const { start, end } = window.weekRangeFromKey(weekKey);
+        const makeItem = (dateObj, labelSuffix, uniqueSuffix) => ({
+          id: `${tpl.id}-${weekKey}-${uniqueSuffix}`,
+          generatedKey: `${tpl.id}::${weekKey}::${uniqueSuffix}`,
+          generatedFromTemplate: true,
+          templateId: tpl.id,
+          item: `${tpl.name}${labelSuffix ? ` - ${labelSuffix}` : ""}`,
+          frequency: tpl.frequency,
+          deadline: window.getLocalISODate(dateObj),
+          deadlineTime: tpl.dueTime || "17:00",
+          qty: tpl.qty || "1",
+          notes: tpl.notes || "Generated dari template dokumen rutin.",
+          driveLink: tpl.driveLink || "",
+          checkedAt: null,
+          late: false,
+          createdAt: Date.now(),
+          isArchived: false
+        });
+        if (tpl.frequency === "Harian") return window.dayNames.map((dayName, idx) => makeItem(window.addDays(start, idx), dayName, `D${idx + 1}`));
+        if (tpl.frequency === "Bulanan") {
+          const day = Math.min(31, Math.max(1, Number(tpl.monthDay || 25)));
+          const months = [new Date(start.getFullYear(), start.getMonth(), day), new Date(end.getFullYear(), end.getMonth(), day)];
+          const candidates = months.filter((d, i, arr) => d >= start && d <= end && arr.findIndex((x) => x.getTime() === d.getTime()) === i);
+          return candidates.map((d) => makeItem(d, window.isoWeekLabel(weekKey), `M${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`));
+        }
+        const dueDay = Math.min(7, Math.max(1, Number(tpl.dueDay || 5)));
+        return [makeItem(window.addDays(start, dueDay - 1), window.isoWeekLabel(weekKey), `W${dueDay}`)];
+      };
+      window.generateTemplateItemsForPeriod = (weekKey) => {
+        if (!weekKey) return 0;
+        if (!window.AppState.checklistPeriods[weekKey]) window.AppState.checklistPeriods[weekKey] = { closed: false, items: [] };
+        const period = window.AppState.checklistPeriods[weekKey];
+        if (period.closed) return 0;
+        const existingKeys = new Set((period.items || []).map((it) => it.generatedKey).filter(Boolean));
+        const additions = [];
+        (window.AppState.checklistTemplates || []).filter((tpl) => tpl.active !== false).forEach((tpl) => {
+          window.buildTemplateItemsForPeriod(weekKey, tpl).forEach((item) => { if (!existingKeys.has(item.generatedKey)) { existingKeys.add(item.generatedKey); additions.push(item); } });
+        });
+        if (additions.length) period.items = [...additions, ...(period.items || [])];
+        return additions.length;
+      };
+      window.applyTemplatesToActivePeriod = async () => {
+        if (!window.requireAdmin()) return;
+        const added = window.generateTemplateItemsForPeriod(window.AppState.checklistActivePeriodKey);
+        window.renderChecklist(); window.renderChecklistTemplates();
+        await window.persistChecklist();
+        alert(added ? `${added} item otomatis dibuat.` : "Tidak ada item baru. Semua laporan rutin periode ini sudah pernah dibuat.");
+      };
+      window.renderChecklistPeriodSelector = () => {
+        const sel = document.getElementById("checklistPeriodSelect"); if (!sel) return;
+        const keys = Array.from(new Set([window.isoWeekKeyFromDate(new Date()), ...Object.keys(window.AppState.checklistPeriods || {})])).sort().reverse();
+        sel.innerHTML = keys.map((key) => `<option value="${key}">${window.isoWeekLabel(key)}${key === window.isoWeekKeyFromDate(new Date()) && !window.AppState.checklistPeriods[key]?.closed ? " (Aktif)" : ""}</option>`).join("");
+        sel.value = window.AppState.checklistActivePeriodKey;
+      };
+      window.renderChecklist = () => {
+        const container = document.getElementById("checklistContainer"); if (!container) return;
+        const period = window.AppState.checklistPeriods[window.AppState.checklistActivePeriodKey] || { items: [] };
+        const items = period.items || []; let onTime = 0, late = 0;
+        items.forEach((it) => { const st = window.computeItemStatus(it); if (st === "ON_TIME") onTime++; if (window.isLateLikeStatus(st)) late++; });
+        window.setText("statOnTime", onTime); window.setText("statLate", late); window.setText("statTotal", items.length); window.setText("checkKPI", `${onTime}/${items.length}`);
+        const bar = document.getElementById("checkKPIBar"); if (bar) bar.style.width = items.length ? `${Math.round((onTime / items.length) * 100)}%` : "0%";
+        window.updateChecklistTemplateCount();
+        if (!items.length) { container.innerHTML = `<tr><td colspan="8" class="p-12 text-center text-slate-400">Belum ada item checklist di periode ini.</td></tr>`; window.updateDeadlineAlert([]); return; }
+        const isViewer = window.currentUserRole !== "admin"; const isClosed = !!period.closed;
+        container.innerHTML = items.map((it, idx) => {
+          const st = window.computeItemStatus(it); const checked = !!it.checkedAt; const locked = isClosed || !!it.isArchived || isViewer;
+          const meta = window.getChecklistStatusMeta(it);
+          const badge = `<span class="inline-flex items-center justify-center px-2 py-1 text-[10px] rounded-full font-extrabold ${meta.badgeClass}">${meta.label}</span>`;
+          const generatedBadge = it.generatedFromTemplate ? '<span class="ml-2 text-[9px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded">Otomatis</span>' : "";
+          const historyBadge = it.isArchived ? '<span class="ml-2 text-[9px] text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">Histori</span>' : "";
+          const deadlineLabel = `${window.escapeHtml(it.deadline || "-")}${it.deadlineTime ? `<div class="text-[10px] text-slate-400 mt-1"><i class="far fa-clock mr-1"></i>${window.escapeHtml(it.deadlineTime)}</div>` : ""}`;
+          const driveBtn = it.driveLink ? `<a href="${window.escapeHtml(it.driveLink)}" target="_blank" rel="noopener" class="inline-flex items-center justify-center text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1 mt-2"><i class="fab fa-google-drive mr-1"></i>Buka Drive</a>` : "";
+          const timingNote = `<div class="mt-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] leading-5 text-slate-600"><div class="font-extrabold text-slate-400 uppercase tracking-wide text-[9px] mb-0.5">Waktu Dicentang</div><div class="font-semibold text-slate-700"><i class="far fa-clock mr-1 text-slate-400"></i>${window.escapeHtml(meta.timingTitle)}</div><div class="text-slate-500">${window.escapeHtml(meta.timingDetail)}</div></div>`;
+          const notesHtml = `<div class="text-slate-700">${window.escapeHtml(it.notes || "-")}</div>${timingNote}`;
+          return `<tr class="border-b border-slate-100 ${locked && !isViewer ? "bg-slate-50 opacity-80" : "bg-white"}"><td class="p-4 text-center text-slate-600">${idx + 1}</td><td class="p-4 font-medium text-slate-900">${window.escapeHtml(it.item || "-")} ${generatedBadge}${historyBadge}${driveBtn}</td><td class="p-4"><span class="px-2 py-1 text-[10px] rounded-full bg-slate-100">${window.escapeHtml(it.frequency || "-")}</span></td><td class="p-4 text-slate-700">${deadlineLabel}</td><td class="p-4 text-center">${window.escapeHtml(it.qty || "-")}</td><td class="p-4 text-center">${badge}<div class="mt-2"><input type="checkbox" ${checked ? "checked" : ""} ${locked ? "disabled" : ""} onchange="window.toggleChecklist('${it.id}', this.checked)" /></div></td><td class="p-4 text-slate-600">${notesHtml}</td><td class="p-4 text-center">${isViewer ? "" : `<button class="text-rose-500 hover:text-rose-700 disabled:opacity-40" ${locked ? "disabled" : ""} onclick="window.deleteChecklistItem('${it.id}')"><i class="fas fa-trash"></i></button>`}</td></tr>`;
+        }).join("");
+        window.updateDeadlineAlert(items);
+      };
+      window.updateDeadlineAlert = (items = []) => {
+        const box = document.getElementById("deadlineAlert"); if (!box) return;
+        const now = Date.now(), twoDays = now + 2 * 86400000;
+        const late = items.filter((it) => window.isLateLikeStatus(window.computeItemStatus(it, now)));
+        const upcoming = items.filter((it) => { const due = window.deadlineMs(it); return !it.checkedAt && due && due >= now && due <= twoDays; });
+        const title = document.getElementById("deadlineAlertTitle"); const text = document.getElementById("deadlineAlertText"); const details = document.getElementById("deadlineAlertDetails"); const icon = document.getElementById("deadlineAlertIcon");
+        if (!late.length && !upcoming.length) { box.classList.add("hidden"); return; }
+        box.classList.remove("hidden");
+        const source = late.length ? late : upcoming;
+        box.className = `mb-6 rounded-2xl border bg-white/70 backdrop-blur p-4 shadow-sm ${late.length ? "border-rose-200" : "border-amber-200"}`;
+        if (icon) icon.className = `mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${late.length ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"}`;
+        if (icon) icon.innerHTML = late.length ? '<i class="fas fa-triangle-exclamation"></i>' : '<i class="fas fa-clock"></i>';
+        if (title) title.innerText = late.length ? `Ada ${late.length} item belum ada / terlambat` : `${upcoming.length} item jatuh tempo dalam 2 hari`;
+        if (text) text.innerText = late.length ? "Segera tindak lanjuti dokumen yang belum tersedia atau terlambat dicentang." : "Persiapkan dokumen yang akan jatuh tempo.";
+        if (details) details.innerHTML = source.slice(0, 6).map((it) => { const meta = window.getChecklistStatusMeta(it, now); return `<div class="text-xs rounded-xl border border-slate-100 bg-white px-3 py-2"><b>${window.escapeHtml(it.item || "-")}</b><br><span class="text-slate-500">${window.escapeHtml(meta.label)} • ${window.escapeHtml(meta.timingNote)}</span></div>`; }).join("");
+      };
+      window.getChecklistStats = (items = []) => {
+        const stats = { onTime: 0, late: 0, pending: 0, total: items.length };
+        items.forEach((it) => {
+          const st = window.computeItemStatus(it);
+          if (st === "ON_TIME") stats.onTime++;
+          else if (window.isLateLikeStatus(st)) stats.late++;
+          else stats.pending++;
+        });
+        return stats;
+      };
+      window.getSCurveSnapshotStats = () => {
+        const rows = window.normalizeSCurveData(window.AppState.sCurveData || []);
+        const last = [...rows].reverse().find((r) => Number.isFinite(r.actual) && r.actual > 0) || rows[rows.length - 1] || {};
+        const planned = Number(last.planned || 0);
+        const actual = last.actual === null || last.actual === undefined ? 0 : Number(last.actual || 0);
+        return { week: last.week || "-", planned, actual, deviation: actual - planned };
+      };
+      window.buildWeeklyArchiveSnapshot = (weekKey) => {
+        const period = window.AppState.checklistPeriods[weekKey] || { items: [] };
+        const items = JSON.parse(JSON.stringify(period.items || []));
+        const checklistStats = window.getChecklistStats(items);
+        const sc = window.getSCurveSnapshotStats();
+        return {
+          weekKey,
+          weekLabel: window.isoWeekLabel(weekKey),
+          status: "closed",
+          archivedAt: Date.now(),
+          archivedBy: window.currentUserEmail || document.getElementById("userEmail")?.innerText || "admin",
+          execSummary: JSON.parse(JSON.stringify(window.AppState.execSummary || {})),
+          sCurveData: JSON.parse(JSON.stringify(window.normalizeSCurveData(window.AppState.sCurveData || []))),
+          checklistItems: items,
+          checklistStats,
+          stats: {
+            checklistOnTime: checklistStats.onTime,
+            checklistLate: checklistStats.late,
+            checklistPending: checklistStats.pending,
+            checklistTotal: checklistStats.total,
+            physicalProgress: sc.actual,
+            plannedProgress: sc.planned,
+            deviation: sc.deviation,
+            sCurveWeek: sc.week,
+          },
+        };
+      };
+      window.renderWeeklyArchivePanel = () => {
+        const wrap = document.getElementById("weeklyArchiveRows");
+        const countEl = document.getElementById("weeklyArchiveCount");
+        if (!wrap) return;
+        const archives = Object.values(window.AppState.weeklyArchives || {})
+          .filter(Boolean)
+          .sort((a, b) => String(b.weekKey || "").localeCompare(String(a.weekKey || "")));
+        if (countEl) countEl.innerText = String(archives.length);
+        if (!archives.length) {
+          wrap.innerHTML = `<div class="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-400">Belum ada arsip mingguan.</div>`;
+          return;
+        }
+        wrap.innerHTML = archives.slice(0, 9).map((arc) => {
+          const stats = arc.stats || {};
+          const late = Number(stats.checklistLate ?? arc.checklistStats?.late ?? 0);
+          const total = Number(stats.checklistTotal ?? arc.checklistStats?.total ?? 0);
+          const progress = Number(stats.physicalProgress || 0).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+          const deviation = Number(stats.deviation || 0);
+          const devClass = deviation >= 0 ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-rose-600 bg-rose-50 border-rose-100";
+          const dateLabel = arc.archivedAt ? new Date(arc.archivedAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "-";
+          return `<button type="button" onclick="window.openWeeklyArchiveModal('${window.escapeHtml(arc.weekKey)}')" class="text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-indigo-200 transition group">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="font-extrabold text-slate-900 group-hover:text-indigo-700">${window.escapeHtml(arc.weekLabel || arc.weekKey || "-")}</p>
+                <p class="text-[11px] text-slate-400 mt-1"><i class="far fa-clock mr-1"></i>${window.escapeHtml(dateLabel)}</p>
+              </div>
+              <span class="text-[10px] font-extrabold uppercase px-2 py-1 rounded-full border ${devClass}">Dev ${deviation.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-4 text-xs">
+              <div class="rounded-xl bg-slate-50 border border-slate-100 p-2"><p class="text-slate-400 font-bold uppercase text-[9px]">Progress</p><p class="font-black text-slate-900">${progress}%</p></div>
+              <div class="rounded-xl bg-amber-50 border border-amber-100 p-2"><p class="text-amber-500 font-bold uppercase text-[9px]">Belum Ada / Telat</p><p class="font-black text-amber-700">${late}</p></div>
+              <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-2"><p class="text-indigo-400 font-bold uppercase text-[9px]">Total</p><p class="font-black text-indigo-700">${total}</p></div>
+            </div>
+          </button>`;
+        }).join("");
+      };
+      window.closeWeeklyArchiveModal = () => window.safeHide("weeklyArchiveModal");
+      window.openWeeklyArchiveModal = (weekKey) => {
+        const arc = (window.AppState.weeklyArchives || {})[weekKey];
+        if (!arc) return alert("Arsip mingguan tidak ditemukan.");
+        const sub = document.getElementById("weeklyArchiveModalSub");
+        const content = document.getElementById("weeklyArchiveModalContent");
+        const archiveDate = arc.archivedAt ? new Date(arc.archivedAt).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "-";
+        if (sub) sub.innerText = `${arc.weekLabel || weekKey} • Diarsipkan ${archiveDate} oleh ${arc.archivedBy || "-"}`;
+        const s = arc.execSummary || {};
+        const stats = arc.stats || {};
+        const items = arc.checklistItems || [];
+        const fmt = (n) => Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+        const divisionRows = (s.divisi || []).length ? (s.divisi || []).map((d) => `<tr class="border-b border-slate-100 last:border-0"><td class="px-4 py-3 font-semibold text-slate-800">${window.escapeHtml(d.name || d.nama || "-")}</td><td class="px-4 py-3 text-right text-slate-700">${fmt(d.weight ?? d.bobot)}%</td><td class="px-4 py-3 text-right font-bold text-slate-900">${fmt(d.progress)}%</td></tr>`).join("") : `<tr><td colspan="3" class="px-4 py-8 text-center text-slate-400">Belum ada rincian divisi.</td></tr>`;
+        const checklistRows = items.length ? items.map((it, idx) => {
+          const meta = window.getChecklistStatusMeta(it);
+          const note = it.notes ? window.escapeHtml(it.notes) : "-";
+          const checkedDisplay = it.checkedAt ? window.escapeHtml(meta.checkedLabel) : `<span class="text-slate-400">Belum dicentang</span>`;
+          const deadlineDisplay = window.escapeHtml(meta.deadlineLabel || it.deadline || "-");
+          return `<tr class="align-top border-b border-slate-100 last:border-0 hover:bg-slate-50/70 transition">
+            <td class="px-4 py-4 text-slate-500 font-semibold">${idx + 1}</td>
+            <td class="px-4 py-4 min-w-[220px]"><div class="font-extrabold text-slate-900">${window.escapeHtml(it.item || "-")}</div>${it.frequency ? `<div class="mt-1 inline-flex px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">${window.escapeHtml(it.frequency)}</div>` : ""}</td>
+            <td class="px-4 py-4 min-w-[160px]"><div class="font-semibold text-slate-800">${deadlineDisplay}</div></td>
+            <td class="px-4 py-4"><span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide ${meta.badgeClass}">${meta.label}</span></td>
+            <td class="px-4 py-4 min-w-[230px]"><div class="font-semibold text-slate-800"><i class="far fa-clock mr-1 text-slate-400"></i>${checkedDisplay}</div><div class="mt-1 text-xs text-slate-500 leading-5">${window.escapeHtml(meta.timingDetail)}</div></td>
+            <td class="px-4 py-4 min-w-[180px] text-slate-600">${note}</td>
+          </tr>`;
+        }).join("") : `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Tidak ada checklist pada arsip ini.</td></tr>`;
+        if (content) content.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm"><p class="text-[10px] uppercase font-extrabold text-indigo-500 tracking-widest">Progress Fisik</p><p class="text-2xl font-black text-indigo-800 mt-1">${fmt(stats.physicalProgress)}%</p></div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p class="text-[10px] uppercase font-extrabold text-slate-400 tracking-widest">Rencana</p><p class="text-2xl font-black text-slate-900 mt-1">${fmt(stats.plannedProgress)}%</p></div>
+            <div class="rounded-2xl border ${Number(stats.deviation || 0) >= 0 ? "border-emerald-100 bg-white" : "border-rose-100 bg-white"} p-4 shadow-sm"><p class="text-[10px] uppercase font-extrabold ${Number(stats.deviation || 0) >= 0 ? "text-emerald-500" : "text-rose-500"} tracking-widest">Deviasi</p><p class="text-2xl font-black ${Number(stats.deviation || 0) >= 0 ? "text-emerald-700" : "text-rose-700"} mt-1">${fmt(stats.deviation)}%</p></div>
+            <div class="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm"><p class="text-[10px] uppercase font-extrabold text-amber-600 tracking-widest">Belum Ada / Telat</p><p class="text-2xl font-black text-amber-700 mt-1">${stats.checklistLate || 0}/${stats.checklistTotal || 0}</p></div>
+          </div>
+          <section class="rounded-3xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+            <div class="p-5 border-b bg-white"><p class="text-[11px] uppercase tracking-[0.18em] font-extrabold text-slate-400">Executive Summary</p><h4 class="text-xl font-black text-slate-950 mt-1">${window.escapeHtml(s.nama || "-")}</h4></div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><span class="text-[10px] uppercase tracking-widest font-black text-slate-400 block mb-1">Lokasi</span><b>${window.escapeHtml(s.lokasi || "-")}</b></div>
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><span class="text-[10px] uppercase tracking-widest font-black text-slate-400 block mb-1">Pengguna Jasa</span><b>${window.escapeHtml(s.pengguna || "-")}</b></div>
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><span class="text-[10px] uppercase tracking-widest font-black text-slate-400 block mb-1">Konsultan MK</span><b>${window.escapeHtml(s.mk || "-")}</b></div>
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><span class="text-[10px] uppercase tracking-widest font-black text-slate-400 block mb-1">Kontraktor</span><b>${window.escapeHtml(s.kontraktor || "-")}</b></div>
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><span class="text-[10px] uppercase tracking-widest font-black text-slate-400 block mb-1">No Kontrak</span><b>${window.escapeHtml(s.no_kontrak || "-")}</b></div>
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3"><span class="text-[10px] uppercase tracking-widest font-black text-slate-400 block mb-1">Nilai</span><b>${window.escapeHtml(s.nilai || "-")}</b></div>
+            </div>
+          </section>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <section class="rounded-3xl border border-slate-200 overflow-hidden bg-white shadow-sm"><div class="p-4 border-b bg-white font-extrabold text-slate-900">Rincian Divisi</div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-400 uppercase text-[10px]"><tr><th class="px-4 py-3 text-left">Divisi</th><th class="px-4 py-3 text-right">Bobot</th><th class="px-4 py-3 text-right">Progress</th></tr></thead><tbody>${divisionRows}</tbody></table></div></section>
+            <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div><p class="font-extrabold text-rose-600 uppercase text-xs mb-2">Permasalahan</p><ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">${(s.masalah || []).map((x) => `<li>${window.escapeHtml(x)}</li>`).join("") || "<li>-</li>"}</ul></div><div><p class="font-extrabold text-emerald-600 uppercase text-xs mb-2">Solusi</p><ul class="list-disc pl-5 text-sm text-slate-600 space-y-1">${(s.solusi || []).map((x) => `<li>${window.escapeHtml(x)}</li>`).join("") || "<li>-</li>"}</ul></div></div></section>
+          </div>
+          <section class="rounded-3xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+            <div class="p-5 border-b bg-white flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div><h4 class="font-black text-slate-950">Checklist Dokumen Saat Ditutup</h4><p class="text-xs text-slate-500 mt-1">Kolom waktu dicentang menunjukkan kapan dokumen dicentang dan apakah melewati deadline.</p></div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Read-only Snapshot</span>
+            </div>
+            <div class="overflow-x-auto"><table class="w-full text-sm min-w-[980px]"><thead class="bg-slate-50 text-slate-400 uppercase text-[10px]"><tr><th class="px-4 py-3 text-left">No</th><th class="px-4 py-3 text-left">Uraian</th><th class="px-4 py-3 text-left">Deadline</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3 text-left">Waktu Dicentang</th><th class="px-4 py-3 text-left">Catatan</th></tr></thead><tbody>${checklistRows}</tbody></table></div>
+          </section>
+        `;
+        window.safeShow("weeklyArchiveModal");
+      };
+
+      window.shiftDeadline = (dateStr, frequency) => {
+        if (!dateStr) return "";
+        const p = dateStr.split("-").map(Number); if (p.length !== 3 || p.some(Number.isNaN)) return dateStr;
+        const d = new Date(p[0], p[1] - 1, p[2]);
+        if (frequency === "Bulanan") d.setMonth(d.getMonth() + 1); else d.setDate(d.getDate() + 7);
+        return window.getLocalISODate(d);
+      };
+      window.evaluateRecurrence = (items = []) => items.filter((it) => it.frequency !== "One-Time" && !it.generatedFromTemplate).map((it) => ({ ...it, id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, sourceItemId: it.sourceItemId || it.id, checkedAt: null, late: false, isArchived: false, createdAt: Date.now(), deadline: window.shiftDeadline(it.deadline, it.frequency) }));
+      window.initCountdown = () => { if (window.AppState.countdownTimer) clearInterval(window.AppState.countdownTimer); window.renderTimeSummary(); window.AppState.countdownTimer = setInterval(window.renderTimeSummary, 1000 * 60); };
+
+      window.normalizeEmbedUrl = (rawUrl = "") => {
+        const raw = String(rawUrl || "").trim();
+        if (!raw) return "";
+
+        // Direct Google Drive file ID support.
+        if (/^[a-zA-Z0-9_-]{20,}$/.test(raw) && !raw.includes("/")) {
+          return `https://drive.google.com/file/d/${raw}/preview`;
+        }
+
+        try {
+          const url = new URL(raw);
+          const host = url.hostname.toLowerCase();
+
+          if (host.includes("drive.google.com")) {
+            const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
+            if (fileMatch && fileMatch[1]) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
+
+            const id = url.searchParams.get("id");
+            if (id) return `https://drive.google.com/file/d/${id}/preview`;
+
+            // Drive root/folder pages cannot be embedded in iframe because of Google's CSP.
+            // Return empty so the dashboard shows the fallback panel instead of a console error.
+            if (raw.includes("/drive/folders/") || raw.includes("/drive/") || url.pathname === "/") return "";
+          }
+
+          return raw;
+        } catch (e) {
+          return raw;
+        }
+      };
+      window.isEmbeddableUrl = (url = "") => {
+        const raw = String(url || "").trim();
+        if (!raw) return false;
+        try {
+          const parsed = new URL(raw);
+          const host = parsed.hostname.toLowerCase();
+          if (host.includes("drive.google.com")) return /\/file\/d\/[^/]+\/preview/.test(parsed.pathname);
+          return /^https?:$/i.test(parsed.protocol);
+        } catch (e) {
+          return false;
+        }
+      };
+      window.openSketchupLinkModal = () => {
+        if (!window.requireAdmin()) return;
+        const input = document.getElementById("sketchupLinkInput");
+        if (input) input.value = window.AppState.media?.sketchupInputUrl || window.AppState.media?.sketchupUrl || "";
+        window.safeShow("sketchupLinkModal");
+      };
+      window.closeSketchupLinkModal = () => window.safeHide("sketchupLinkModal");
+      window.loadJsonp = (url) => new Promise((resolve, reject) => {
+        const callbackName = `jsonpMedia_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+        const script = document.createElement("script");
+        const separator = url.includes("?") ? "&" : "?";
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("JSONP timeout"));
+        }, 15000);
+        function cleanup() {
+          clearTimeout(timeout);
+          script.remove();
+          delete window[callbackName];
+        }
+        window[callbackName] = (data) => {
+          cleanup();
+          resolve(data || {});
+        };
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("JSONP script load failed"));
+        };
+        script.src = `${url}${separator}callback=${callbackName}`;
+        document.body.appendChild(script);
+      });
+
+      window.setActiveMedia = (type) => {
+        window.AppState.activeMedia = type || "photo";
+        window.renderMedia();
+      };
+      window.mediaTitle = (item, fallback = "Media") => item?.name || item?.title || item?.caption || fallback;
+      window.driveFileIdFromUrl = (rawUrl = "") => {
+        const raw = String(rawUrl || "").trim();
+        if (/^[a-zA-Z0-9_-]{20,}$/.test(raw) && !raw.includes("/")) return raw;
+        try {
+          const url = new URL(raw);
+          const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
+          if (fileMatch && fileMatch[1]) return fileMatch[1];
+          const openMatch = raw.match(/[?&]id=([^&]+)/);
+          if (openMatch && openMatch[1]) return decodeURIComponent(openMatch[1]);
+          return url.searchParams.get("id") || "";
+        } catch (e) {
+          const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
+          return fileMatch?.[1] || "";
+        }
+      };
+      window.mediaRawUrl = (item) => item?.thumbnailUrl || item?.thumbUrl || item?.imageUrl || item?.src || item?.url || item?.rawUrl || item?.viewUrl || "";
+      window.mediaUrl = (item) => window.normalizeEmbedUrl(item?.embedUrl || item?.url || item?.rawUrl || item?.viewUrl || "");
+      window.photoUrlCandidates = (item) => {
+        const raw = String(window.mediaRawUrl(item) || "").trim();
+        const id = item?.id || window.driveFileIdFromUrl(raw);
+        const urls = [];
+        const add = (url) => { if (url && !urls.includes(url)) urls.push(url); };
+        if (raw && !/drive\.google\.com\/file\/d\/[^/]+\/preview/i.test(raw)) add(raw);
+        if (id) {
+          add(`https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1600`);
+          add(`https://lh3.googleusercontent.com/d/${encodeURIComponent(id)}=w1600`);
+          add(`https://drive.google.com/uc?export=view&id=${encodeURIComponent(id)}`);
+        }
+        return urls;
+      };
+      window.photoUrl = (item) => window.photoUrlCandidates(item)[0] || "";
+      window.setImageWithFallback = (img, item, emptyEl) => {
+        if (!img) return false;
+        const candidates = window.photoUrlCandidates(item);
+        img.onerror = null;
+        if (!candidates.length) {
+          img.removeAttribute("src");
+          img.classList.add("hidden");
+          emptyEl?.classList.remove("hidden");
+          return false;
+        }
+        let idx = 0;
+        img.onerror = () => {
+          idx += 1;
+          if (idx < candidates.length) {
+            img.src = candidates[idx];
+          } else {
+            img.classList.add("hidden");
+            emptyEl?.classList.remove("hidden");
+            console.warn("Foto gagal dimuat. Pastikan file Drive dibagikan sebagai Anyone with the link.", item);
+          }
+        };
+        emptyEl?.classList.add("hidden");
+        img.classList.remove("hidden");
+        if (img.src !== candidates[0]) img.src = candidates[0];
+        return true;
+      };
+      window.normalizeMediaArray = (items = [], fallbackTitle = "Media") => {
+        const arr = Array.isArray(items) ? items : (items ? [items] : []);
+        return arr
+          .map((item, i) => typeof item === "string" ? { url: item, name: `${fallbackTitle} ${i + 1}` } : { ...item, name: window.mediaTitle(item, `${fallbackTitle} ${i + 1}`) })
+          .map((item) => ({ ...item, embedUrl: window.mediaUrl(item) }))
+          .filter((item) => item.embedUrl);
+      };
+      window.setMediaFrame = (frameId, emptyId, url) => {
+        const fr = document.getElementById(frameId);
+        const em = document.getElementById(emptyId);
+        if (!fr || !em) return;
+        const safeUrl = window.isEmbeddableUrl(url) ? url : "";
+        if (safeUrl) {
+          if (fr.src !== safeUrl) fr.src = safeUrl;
+          fr.classList.remove("hidden");
+          em.classList.add("hidden");
+        } else {
+          fr.removeAttribute("src");
+          fr.classList.add("hidden");
+          em.classList.remove("hidden");
+        }
+      };
+      window.setMediaPreviewFrame = (frameId, emptyId, url) => {
+        const fr = document.getElementById(frameId);
+        const em = document.getElementById(emptyId);
+        if (!fr || !em) return;
+        const safeUrl = window.isEmbeddableUrl(url) ? url : "";
+        if (safeUrl) {
+          if (fr.src !== safeUrl) fr.src = safeUrl;
+          fr.classList.remove("hidden");
+          em.classList.add("hidden");
+        } else {
+          fr.removeAttribute("src");
+          fr.classList.add("hidden");
+          em.classList.remove("hidden");
+        }
+      };
+      window.renderMedia = () => {
+        const type = window.AppState.activeMedia || "photo";
+        const photos = window.AppState.filteredPhotos || window.AppState.photos || [];
+        const videos = window.AppState.videos || [];
+        const sketchups = window.AppState.sketchups || [];
+        if (photos.length) window.AppState.currentPhotoIndex = Math.max(0, Math.min(window.AppState.currentPhotoIndex || 0, photos.length - 1));
+        if (videos.length) window.AppState.currentVideoIndex = Math.max(0, Math.min(window.AppState.currentVideoIndex || 0, videos.length - 1));
+        if (sketchups.length) window.AppState.currentSketchupIndex = Math.max(0, Math.min(window.AppState.currentSketchupIndex || 0, sketchups.length - 1));
+        const videoItem = videos.length ? videos[window.AppState.currentVideoIndex % videos.length] : null;
+        const sketchupItem = sketchups.length ? sketchups[window.AppState.currentSketchupIndex % sketchups.length] : null;
+        const videoUrl = videoItem?.embedUrl || window.AppState.media?.videoUrl || "";
+        const sketchupUrl = sketchupItem?.embedUrl || window.AppState.media?.sketchupUrl || "";
+
+        ["photo", "video", "sketchup"].forEach((key) => {
+          const view = document.getElementById(`media${key[0].toUpperCase()}${key.slice(1)}View`);
+          if (view) view.classList.toggle("hidden", key !== type);
+          const tab = document.getElementById(`mediaTab${key[0].toUpperCase()}${key.slice(1)}`);
+          if (tab) {
+            tab.classList.toggle("ring-2", key === type);
+            tab.classList.toggle("ring-cyan-200", key === type);
+            tab.classList.toggle("border-cyan-200", key === type);
+            tab.classList.toggle("bg-cyan-50", key === type);
+            tab.classList.toggle("border-slate-100", key !== type);
+            tab.classList.toggle("bg-slate-50", key !== type);
+          }
+        });
+
+        const img = document.getElementById("photoSliderImg");
+        const empty = document.getElementById("photoSliderEmpty");
+        const cap = document.getElementById("photoCaption");
+        const photoPreviewImg = document.getElementById("photoTabPreviewImg");
+        const photoPreviewEmpty = document.getElementById("photoTabPreviewEmpty");
+        if (photos.length && img) {
+          const index = window.AppState.currentPhotoIndex % photos.length;
+          const p = photos[index];
+          window.setImageWithFallback(img, p, empty);
+          window.setImageWithFallback(photoPreviewImg, p, photoPreviewEmpty);
+          if (cap) {
+            cap.innerText = p.caption || p.name || p.folder || `Foto ${index + 1}/${photos.length}`;
+            cap.classList.remove("hidden");
+          }
+        } else {
+          img?.classList.add("hidden");
+          empty?.classList.remove("hidden");
+          cap?.classList.add("hidden");
+          photoPreviewImg?.classList.add("hidden");
+          photoPreviewEmpty?.classList.remove("hidden");
+        }
+
+        window.setMediaFrame("videoMainFrame", "videoMainEmpty", videoUrl);
+        window.setMediaFrame("sketchupMainFrame", "sketchupMainEmpty", sketchupUrl);
+        window.setMediaPreviewFrame("videoTabPreviewFrame", "videoTabPreviewEmpty", videoUrl);
+        window.setMediaPreviewFrame("sketchupTabPreviewFrame", "sketchupTabPreviewEmpty", sketchupUrl);
+
+        const photoCount = document.getElementById("photoCountBadge");
+        if (photoCount) photoCount.innerText = `${photos.length} file`;
+        const photoTabText = document.getElementById("photoTabText");
+        if (photoTabText) photoTabText.innerText = photos.length ? `${window.mediaTitle(photos[window.AppState.currentPhotoIndex % photos.length], "Foto proyek")} • ${Math.min(window.AppState.currentPhotoIndex + 1, photos.length)}/${photos.length}` : "Belum ada foto.";
+
+        const videoBadge = document.getElementById("videoStatusBadge");
+        if (videoBadge) videoBadge.innerText = videos.length ? `${videos.length} video` : (videoUrl ? "ready" : "empty");
+        const videoText = document.getElementById("videoTabText");
+        if (videoText) videoText.innerText = videoUrl ? `${window.mediaTitle(videoItem, "Video proyek")} • ${videos.length ? window.AppState.currentVideoIndex + 1 : 1}/${videos.length || 1}` : "Belum ada video.";
+        const videoControls = document.getElementById("videoTabControls");
+        if (videoControls) videoControls.classList.toggle("hidden", videos.length <= 1);
+        const videoCounter = document.getElementById("videoTabCounter");
+        if (videoCounter) videoCounter.innerText = `${videos.length ? window.AppState.currentVideoIndex + 1 : 0}/${videos.length}`;
+
+        const sketchupBadge = document.getElementById("sketchupStatusBadge");
+        if (sketchupBadge) sketchupBadge.innerText = sketchups.length ? `${sketchups.length} model` : (sketchupUrl ? "ready" : "empty");
+        const sketchupText = document.getElementById("sketchupTabText");
+        if (sketchupText) sketchupText.innerText = sketchupUrl ? `${window.mediaTitle(sketchupItem, "Preview 3D")}` : "Belum ada preview 3D.";
+        const sketchupHint = document.getElementById("sketchupManualHint");
+        if (sketchupHint) sketchupHint.classList.toggle("hidden", !sketchupUrl);
+
+        const sel = document.getElementById("photoFolderSelect");
+        if (sel) sel.classList.toggle("hidden", type !== "photo");
+      };
+      window.changePhoto = (dir) => {
+        const photos = window.AppState.filteredPhotos || [];
+        if (!photos.length) return;
+        window.AppState.activeMedia = "photo";
+        window.AppState.currentPhotoIndex = (window.AppState.currentPhotoIndex + dir + photos.length) % photos.length;
+        window.renderMedia();
+      };
+      window.changeVideo = (dir) => {
+        const videos = window.AppState.videos || [];
+        if (!videos.length) return;
+        window.AppState.activeMedia = "video";
+        window.AppState.currentVideoIndex = (window.AppState.currentVideoIndex + dir + videos.length) % videos.length;
+        window.AppState.media = { ...(window.AppState.media || {}), videoUrl: videos[window.AppState.currentVideoIndex]?.embedUrl || "" };
+        window.renderMedia();
+      };
+      window.filterPhotosByFolder = (folder) => {
+        window.AppState.filteredPhotos = folder === "all" ? [...window.AppState.photos] : window.AppState.photos.filter((p) => (p.folder || p.date || "") === folder);
+        window.AppState.currentPhotoIndex = 0;
+        window.AppState.activeMedia = "photo";
+        window.renderMedia();
+      };
+      window.loadMediaData = async () => {
+        if (!window.AppState.APPS_SCRIPT_URL) {
+          window.renderMedia();
+          return;
+        }
+        try {
+          const data = await window.loadJsonp(`${window.AppState.APPS_SCRIPT_URL}?action=getMedia`);
+          const photos = data.photos || data.foto || data.images || [];
+          window.AppState.photos = photos.map((p) => typeof p === "string" ? { url: p, caption: "Foto Proyek", folder: "Tanpa Folder" } : p).filter((p) => window.photoUrl(p));
+          window.AppState.filteredPhotos = [...window.AppState.photos];
+          const sel = document.getElementById("photoFolderSelect");
+          if (sel) {
+            const folders = [...new Set(window.AppState.photos.map((p) => p.folder || p.date).filter(Boolean))];
+            sel.innerHTML = `<option value="all">Semua Foto</option>` + folders.map((f) => `<option value="${f}">${f}</option>`).join("");
+          }
+          const existingMedia = window.AppState.media || {};
+          const rawVideos = data.videos || data.videoList || (data.video ? [data.video] : []) || [];
+          const normalizedVideos = window.normalizeMediaArray(rawVideos, "Video");
+          if (!normalizedVideos.length && (data.videoUrl || existingMedia.videoUrl)) normalizedVideos.push({ name: "Video proyek", embedUrl: window.normalizeEmbedUrl(data.videoUrl || existingMedia.videoUrl) });
+
+          const gasSketchups = data.models || data.sketchups || data.sketchupList || (data.sketchup ? [data.sketchup] : []);
+          const normalizedSketchups = window.normalizeMediaArray(gasSketchups, "Preview 3D");
+          const manualSketchup = existingMedia.sketchupUrl ? { name: "Link manual SketchUp / 3D", embedUrl: window.normalizeEmbedUrl(existingMedia.sketchupUrl), rawUrl: existingMedia.sketchupInputUrl || existingMedia.sketchupUrl } : null;
+          if (manualSketchup?.embedUrl && !normalizedSketchups.some((x) => x.embedUrl === manualSketchup.embedUrl)) normalizedSketchups.unshift(manualSketchup);
+          if (!normalizedSketchups.length && data.sketchupUrl) normalizedSketchups.push({ name: "Preview 3D", embedUrl: window.normalizeEmbedUrl(data.sketchupUrl) });
+
+          window.AppState.videos = normalizedVideos;
+          window.AppState.sketchups = normalizedSketchups;
+          window.AppState.currentVideoIndex = Math.min(window.AppState.currentVideoIndex || 0, Math.max(normalizedVideos.length - 1, 0));
+          window.AppState.currentSketchupIndex = Math.min(window.AppState.currentSketchupIndex || 0, Math.max(normalizedSketchups.length - 1, 0));
+          window.AppState.media = {
+            ...existingMedia,
+            videoUrl: normalizedVideos[window.AppState.currentVideoIndex]?.embedUrl || existingMedia.videoUrl || "",
+            sketchupUrl: normalizedSketchups[window.AppState.currentSketchupIndex]?.embedUrl || existingMedia.sketchupUrl || "",
+          };
+          window.renderMedia();
+        } catch (e) {
+          console.warn("Gagal memuat media GAS:", e);
+          window.renderMedia();
+        }
+      };
+</script><script type="module">
+      import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { auth, db } from "./firebase-config.js";
+
+      window.persistProjectData = async (partial = {}) => {
+        if (!window.requireAdmin()) return;
+        await setDoc(doc(db, "projects", window.AppState.projectId), partial, { merge: true });
+      };
+      window.saveSketchupLink = async () => {
+        if (!window.requireAdmin()) return;
+        const btn = document.getElementById("saveSketchupLinkBtn");
+        const oldHtml = btn?.innerHTML;
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...'; }
+        try {
+          const raw = document.getElementById("sketchupLinkInput")?.value.trim() || "";
+          const normalized = window.normalizeEmbedUrl(raw);
+          window.AppState.media = { ...(window.AppState.media || {}), sketchupUrl: normalized, sketchupInputUrl: raw };
+          window.AppState.sketchups = normalized ? [{ name: "Link manual SketchUp / 3D", embedUrl: normalized, rawUrl: raw }] : [];
+          window.AppState.currentSketchupIndex = 0;
+          await window.persistProjectData({ media: window.AppState.media });
+          window.AppState.activeMedia = "sketchup";
+          window.renderMedia();
+          window.closeSketchupLinkModal();
+          alert(normalized ? "Link SketchUp berhasil disimpan." : "Link SketchUp dikosongkan.");
+        } catch (e) {
+          console.error(e);
+          alert("Gagal menyimpan link SketchUp: " + (e?.message || e));
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = oldHtml || '<i class="fas fa-save mr-1"></i> Simpan Link'; }
+        }
+      };
+      window.clearSketchupLink = async () => {
+        if (!window.requireAdmin()) return;
+        if (!confirm("Hapus link SketchUp / 3D dari dashboard?")) return;
+        const input = document.getElementById("sketchupLinkInput");
+        if (input) input.value = "";
+        window.AppState.media = { ...(window.AppState.media || {}), sketchupUrl: "", sketchupInputUrl: "" };
+        window.AppState.sketchups = [];
+        window.AppState.currentSketchupIndex = 0;
+        await window.persistProjectData({ media: window.AppState.media });
+        window.renderMedia();
+        window.closeSketchupLinkModal();
+        alert("Link SketchUp dihapus.");
+      };
+      const textareaLines = (id) => (document.getElementById(id)?.value || "").split("\n").map((v) => v.trim()).filter(Boolean);
+      const setButtonLoading = (id, loading, label) => { const btn = document.getElementById(id); if (!btn) return; btn.disabled = loading; btn.innerHTML = loading ? '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...' : label; };
+
+      window.saveExecutiveSummary = async () => {
+        if (!window.requireAdmin()) return;
+        setButtonLoading("saveSummaryBtn", true, '<i class="fas fa-save mr-1"></i> Simpan');
+        try {
+          const divisi = Array.from(document.querySelectorAll("#divisionRows tr")).map((tr) => ({ nama: tr.querySelector(".div-name")?.value.trim() || "-", bobot: window.toNumber(tr.querySelector(".div-weight")?.value) ?? 0, progress: window.toNumber(tr.querySelector(".div-progress")?.value) ?? 0 })).filter((d) => d.nama !== "-" || d.bobot || d.progress);
+          window.AppState.execSummary = { minggu_ke: document.getElementById("summaryMinggu")?.value.trim() || "0", nama: document.getElementById("summaryNama")?.value.trim() || "-", lokasi: document.getElementById("summaryLokasi")?.value.trim() || "-", pengguna: document.getElementById("summaryPengguna")?.value.trim() || "-", mk: document.getElementById("summaryMK")?.value.trim() || "-", kontraktor: document.getElementById("summaryKontraktor")?.value.trim() || "-", no_kontrak: document.getElementById("summaryNoKontrak")?.value.trim() || "-", nilai: document.getElementById("summaryNilai")?.value.trim() || "Rp 0", divisi, masalah: textareaLines("summaryMasalah"), solusi: textareaLines("summarySolusi") };
+          await window.persistProjectData({ execSummary: window.AppState.execSummary }); window.renderExecutiveSummary(); window.closeSummaryModal(); alert("Executive Summary berhasil disimpan.");
+        } catch (e) { console.error(e); alert("Gagal menyimpan Executive Summary: " + e.message); }
+        finally { setButtonLoading("saveSummaryBtn", false, '<i class="fas fa-save mr-1"></i> Simpan'); }
+      };
+      window.savePhoDates = async () => {
+        if (!window.requireAdmin()) return; const start = document.getElementById("startDateInput")?.value; const end = document.getElementById("phoDateInput")?.value; if (!start || !end) return alert("Tanggal mulai dan PHO wajib diisi.");
+        try { window.AppState.projectStartDate = start; window.AppState.phoEndDate = end; await window.persistProjectData({ projectStartDate: start, phoEndDate: end }); window.renderTimeSummary(); window.initCountdown(); window.closePhoModal(); alert("Tanggal proyek berhasil disimpan."); } catch (e) { alert("Gagal menyimpan tanggal: " + e.message); }
+      };
+      window.saveSCurveData = async () => {
+        if (!window.requireAdmin()) return;
+        const rows = Array.from(document.querySelectorAll("#sCurveRows tr")).map((tr) => ({ week: tr.querySelector(".sc-week")?.value.trim(), planned: window.toNumber(tr.querySelector(".sc-planned")?.value) ?? 0, actual: window.toNumber(tr.querySelector(".sc-actual")?.value) })).filter((r) => r.week && (r.planned || r.actual !== null));
+        if (!rows.length) return alert("Data Kurva S belum valid.");
+        try { window.AppState.sCurveData = window.normalizeSCurveData(rows); await window.persistProjectData({ sCurveData: window.AppState.sCurveData }); window.renderSCurve(); window.closeSCurveModal(); alert("Data Kurva S berhasil disimpan."); } catch (e) { alert("Gagal menyimpan Kurva S: " + e.message); }
+      };
+      window.persistChecklist = async () => await window.persistProjectData({ checklistPeriods: window.AppState.checklistPeriods, checklistActivePeriodKey: window.AppState.checklistActivePeriodKey, checklistTemplates: window.AppState.checklistTemplates, weeklyArchives: window.AppState.weeklyArchives });
+      window.addChecklistItem = async () => {
+        if (!window.requireAdmin()) return; const elName = document.getElementById("newChecklistInput"); const elFreq = document.getElementById("newChecklistFreq"); if (!elName?.value.trim()) return alert("Nama item wajib diisi.");
+        const driveLink = window.normalizeDriveLink(document.getElementById("newChecklistDriveLink")?.value);
+        if (driveLink && !/^https?:\/\//i.test(driveLink)) return alert("Link Drive harus diawali http:// atau https://");
+        const activeKey = window.AppState.checklistActivePeriodKey; if (!window.AppState.checklistPeriods[activeKey]) window.AppState.checklistPeriods[activeKey] = { closed: false, items: [] };
+        window.AppState.checklistPeriods[activeKey].items.unshift({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, item: elName.value.trim(), frequency: elFreq.value, deadline: window.normalizeDateInputValue(document.getElementById("newChecklistDate")?.value), qty: document.getElementById("newChecklistQty")?.value.trim() || "", notes: document.getElementById("newChecklistNote")?.value.trim() || "", driveLink, checkedAt: null, late: false, createdAt: Date.now(), isArchived: false });
+        ["newChecklistInput", "newChecklistQty", "newChecklistNote", "newChecklistDriveLink"].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ""; }); window.renderChecklist(); await window.persistChecklist();
+      };
+      window.toggleChecklist = async (id, checked) => {
+        if (!window.requireAdmin()) return; const period = window.AppState.checklistPeriods[window.AppState.checklistActivePeriodKey]; if (!period || period.closed) return; const it = (period.items || []).find((x) => x.id === id); if (!it) return;
+        if (checked) { const now = Date.now(); it.checkedAt = now; const dueMs = window.deadlineMs(it); it.late = !!(dueMs && now > dueMs); } else { it.checkedAt = null; it.late = false; }
+        window.renderChecklist(); await window.persistChecklist();
+      };
+      window.deleteChecklistItem = async (id) => { if (!window.requireAdmin()) return; if (!confirm("Yakin hapus item ini?")) return; const period = window.AppState.checklistPeriods[window.AppState.checklistActivePeriodKey]; period.items = (period.items || []).filter((x) => x.id !== id); window.renderChecklist(); await window.persistChecklist(); };
+      window.changeChecklistPeriod = async (weekKey) => { window.AppState.checklistActivePeriodKey = weekKey; if (window.currentUserRole === "admin") { const added = window.generateTemplateItemsForPeriod(weekKey); if (added) await window.persistChecklist(); } window.renderChecklistPeriodSelector(); window.renderChecklist(); };
+      window.closeArchiveConfirmModal = () => window.safeHide("archiveConfirmModal");
+
+      window.archiveCurrentWeek = () => {
+        if (!window.requireAdmin()) return;
+
+        const key = window.AppState.checklistActivePeriodKey || window.isoWeekKeyFromDate(new Date());
+        const period = window.AppState.checklistPeriods[key];
+
+        if (!period) return alert("Periode aktif tidak ditemukan.");
+        if (period.closed) return alert("Periode ini sudah ditutup.");
+
+        const items = period.items || [];
+        const checklistStats = window.getChecklistStats(items);
+        const scStats = window.getSCurveSnapshotStats();
+
+        window.setText("archiveConfirmPeriod", window.isoWeekLabel(key));
+        window.setText("archiveConfirmTotal", items.length);
+        window.setText("archiveConfirmOnTime", checklistStats.onTime);
+        window.setText("archiveConfirmLate", checklistStats.late);
+        window.setText("archiveConfirmPending", checklistStats.pending);
+        window.setText("archiveConfirmProgress", `${scStats.actual.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%`);
+        window.setText("archiveConfirmDeviation", `${scStats.deviation.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%`);
+
+        window.safeShow("archiveConfirmModal");
+      };
+
+      window.confirmArchiveCurrentWeek = async () => {
+        if (!window.requireAdmin()) return;
+
+        const key = window.AppState.checklistActivePeriodKey || window.isoWeekKeyFromDate(new Date());
+        const period = window.AppState.checklistPeriods[key];
+
+        if (!period) return alert("Periode aktif tidak ditemukan.");
+        if (period.closed) {
+          window.closeArchiveConfirmModal();
+          return alert("Periode ini sudah ditutup.");
+        }
+
+        const btn = document.getElementById("confirmArchiveBtn");
+        const originalHtml = btn ? btn.innerHTML : "";
+
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menutup...';
+        }
+
+        try {
+          const items = period.items || [];
+          const checklistStats = window.getChecklistStats(items);
+          const scStats = window.getSCurveSnapshotStats();
+
+          window.AppState.weeklyArchives = window.AppState.weeklyArchives || {};
+          window.AppState.weeklyArchives[key] = window.buildWeeklyArchiveSnapshot(key);
+          period.closed = true;
+          period.closedAt = Date.now();
+          period.archivedAt = window.AppState.weeklyArchives[key].archivedAt;
+          period.items = items.map((it) => ({ ...it, isArchived: true }));
+
+          const nextKey = window.nextWeekKey(key);
+          if (!window.AppState.checklistPeriods[nextKey]) {
+            window.AppState.checklistPeriods[nextKey] = { closed: false, items: [] };
+          }
+
+          const existingSources = new Set((window.AppState.checklistPeriods[nextKey].items || []).map((it) => it.sourceItemId));
+          const recurring = window.evaluateRecurrence(period.items).filter((it) => !existingSources.has(it.sourceItemId));
+          window.AppState.checklistPeriods[nextKey].items.unshift(...recurring);
+
+          const fromTemplates = window.generateTemplateItemsForPeriod(nextKey);
+          window.AppState.checklistActivePeriodKey = nextKey;
+
+          await window.persistChecklist();
+          window.renderChecklistPeriodSelector();
+          window.renderChecklist();
+          window.renderChecklistTemplates();
+          window.renderWeeklyArchivePanel();
+          window.closeArchiveConfirmModal();
+
+          alert(`Minggu ditutup dan arsip mingguan dibuat. ${recurring.length} item rutin manual dan ${fromTemplates} item otomatis dibuat untuk periode berikutnya.`);
+        } catch (err) {
+          console.error("Gagal menutup minggu:", err);
+          alert("Gagal menutup minggu: " + err.message);
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+          }
+        }
+      };
+      async function loadProjectData() {
+        const currentKey = window.isoWeekKeyFromDate(new Date());
+        try {
+          const setupSnap = await getDoc(doc(db, "project_settings", "default"));
+          if (setupSnap.exists()) {
+            const setup = setupSnap.data() || {};
+            if (setup.appsScriptUrl) window.AppState.APPS_SCRIPT_URL = setup.appsScriptUrl;
+          }
+        } catch (e) {
+          console.warn("Project setup belum terbaca, memakai Apps Script default.", e);
+        }
+        try { const snap = await getDoc(doc(db, "projects", window.AppState.projectId)); if (snap.exists()) { const data = snap.data(); if (data.execSummary) window.AppState.execSummary = { ...window.AppState.execSummary, ...data.execSummary }; if (data.sCurveData) {
+              const cleanedSCurve = window.normalizeSCurveData(data.sCurveData);
+              window.AppState.sCurveData = cleanedSCurve;
+              if (
+                window.currentUserRole === "admin" &&
+                JSON.stringify(cleanedSCurve) !== JSON.stringify(data.sCurveData || [])
+              ) {
+                await window.persistProjectData({ sCurveData: cleanedSCurve });
+              }
+            } if (data.projectStartDate) window.AppState.projectStartDate = data.projectStartDate; if (data.phoEndDate) window.AppState.phoEndDate = data.phoEndDate; if (data.media) window.AppState.media = { ...window.AppState.media, ...data.media }; if (data.checklistPeriods) window.AppState.checklistPeriods = data.checklistPeriods; if (data.checklistActivePeriodKey) window.AppState.checklistActivePeriodKey = data.checklistActivePeriodKey; if (Array.isArray(data.checklistTemplates)) window.AppState.checklistTemplates = data.checklistTemplates; if (data.weeklyArchives) window.AppState.weeklyArchives = data.weeklyArchives; } } catch (e) { console.warn("DB Failed, using local memory.", e); }
+        if (!window.AppState.checklistPeriods[currentKey]) window.AppState.checklistPeriods[currentKey] = { closed: false, items: [] }; if (!window.AppState.checklistActivePeriodKey) window.AppState.checklistActivePeriodKey = currentKey;
+        if (window.currentUserRole === "admin") { const added = window.generateTemplateItemsForPeriod(currentKey); if (added) await window.persistChecklist(); }
+        window.renderAllProjectViews(); window.renderChecklistTemplates(); window.initCountdown();
+      }
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "index.html"; return; }
+        window.currentUserEmail = user.email; document.getElementById("userEmail").innerText = user.email; document.getElementById("logoutBtn").onclick = () => signOut(auth);
+        try { const userSnap = await getDoc(doc(db, "users", user.uid)); if (userSnap.exists()) { const userData = userSnap.data(); if (userData.active === false || userData.status === "inactive") { alert("Akun Anda sedang nonaktif. Hubungi administrator."); await signOut(auth); window.location.href = "index.html"; return; } window.currentUserRole = String(userData.role || "viewer").toLowerCase(); } else window.currentUserRole = "viewer"; } catch (e) { console.error("Gagal membaca role user:", e); window.currentUserRole = "viewer"; }
+        document.getElementById("userRole").innerText = window.currentUserRole.toUpperCase();
+        ["adminChartActions", "adminChecklistActions", "archiveBtn", "resetChecklistBtn", "adminMenu", "editPhoBtn1", "editPhoBtn2", "editSummaryBtn", "editSketchupLinkBtn"].forEach((id) => { const el = document.getElementById(id); if (!el) return; if (window.currentUserRole === "admin") { el.classList.remove("hidden"); if (id.includes("Actions")) el.classList.add("flex"); } else { el.classList.add("hidden"); if (id.includes("Actions")) el.classList.remove("flex"); } });
+        const csvInput = document.getElementById("csvInput"); if (csvInput) csvInput.addEventListener("change", async (e) => { const file = e.target.files?.[0]; if (!file) return; if (!window.requireAdmin()) { e.target.value = ""; return; } try { const rows = window.parseSCurveCSVText(await file.text()); if (!rows.length) return alert("CSV tidak valid. Gunakan template atau file yang memuat baris RENCANA dan REALISASI."); window.AppState.sCurveData = rows; await window.persistProjectData({ sCurveData: rows }); window.renderSCurve(); alert(`CSV Kurva S berhasil diupload. ${rows.length} minggu terbaca.`); } catch (err) { console.error(err); alert("Gagal membaca CSV: " + (err?.message || err)); } finally { e.target.value = ""; } });
+        await loadProjectData(); window.loadMediaData();
+      });
+</script></body>
+</html>

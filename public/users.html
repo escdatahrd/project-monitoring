@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manajemen User - Portal Admin</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="ui.css?v=4" />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+
+  <body class="bg-slate-50 text-slate-900 flex h-screen overflow-hidden">
+    <aside
+      class="w-64 bg-white border-r border-slate-200 flex flex-col z-20 rounded-none"
+    >
+      <div class="h-16 flex items-center px-6 border-b border-slate-100">
+        <div
+          class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white mr-3 shadow-sm"
+        >
+          <i class="fas fa-building"></i>
+        </div>
+        <span class="font-extrabold text-lg tracking-tight text-slate-800"
+          >Proyek<span class="text-blue-600">App</span></span
+        >
+      </div>
+
+      <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+        <p
+          class="px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2"
+        >
+          Main Menu
+        </p>
+        <a
+          href="dashboard.html"
+          class="nav-item flex items-center px-4 py-3 text-sm font-semibold text-slate-600 rounded-xl hover:bg-slate-50 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-th-large w-6 text-center mr-2 text-slate-400"></i>
+          Dashboard
+        </a>
+        <a
+          href="documents.html"
+          class="nav-item flex items-center px-4 py-3 text-sm font-semibold text-slate-600 rounded-xl hover:bg-slate-50 hover:text-slate-900 transition"
+        >
+          <i class="fas fa-folder-open w-6 text-center mr-2 text-slate-400"></i>
+          Dokumen
+        </a>
+
+        <div class="mt-6" id="adminMenuSidebar">
+          <p
+            class="px-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 mt-6"
+          >
+            Admin Console
+          </p>
+          <a
+            href="users.html"
+            class="nav-item active flex items-center px-4 py-3 text-sm font-semibold text-blue-700 rounded-xl bg-blue-50 border border-blue-100"
+          >
+            <i class="fas fa-users-cog w-6 text-center mr-2 text-blue-600"></i>
+            User Management
+          </a>
+        </div>
+      </nav>
+
+      <div class="p-4 border-t border-slate-100">
+        <button
+          onclick="window.location.href = 'dashboard.html'"
+          class="w-full text-xs text-slate-600 hover:text-blue-700 font-bold py-2 rounded-lg hover:bg-slate-50 transition"
+        >
+          <i class="fas fa-arrow-left mr-1"></i> Kembali ke Dashboard
+        </button>
+      </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <header
+        class="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-6 lg:px-8 shadow-sm rounded-none"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100"
+          >
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="leading-tight">
+            <h1 class="text-lg lg:text-xl font-extrabold text-slate-900">
+              Daftar Pengguna
+            </h1>
+            <p class="text-[11px] text-slate-500 font-medium">
+              Kelola akses, status aktif/nonaktif, dan reset password pengguna.
+            </p>
+          </div>
+        </div>
+
+        <button
+          id="btnTambahUser"
+          onclick="window.openAddModal()"
+          class="hidden bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-xl text-sm font-extrabold shadow-sm transition items-center gap-2"
+        >
+          <i class="fas fa-user-plus"></i> Tambah User
+        </button>
+      </header>
+
+      <main
+        class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 lg:p-8"
+      >
+        <div class="mb-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+                <i class="fas fa-user-check"></i>
+              </div>
+              <div>
+                <p class="text-xs font-extrabold uppercase tracking-wide text-slate-400">Operasional Harian</p>
+                <h3 class="font-extrabold text-slate-900 mt-0.5">Nonaktifkan User</h3>
+                <p class="text-xs text-slate-500 leading-5 mt-1">Gunakan untuk mencabut akses tanpa menghapus akun login. User bisa diaktifkan kembali dengan nama dan role baru.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center shrink-0">
+                <i class="fas fa-key"></i>
+              </div>
+              <div>
+                <p class="text-xs font-extrabold uppercase tracking-wide text-slate-400">Lupa Password</p>
+                <h3 class="font-extrabold text-slate-900 mt-0.5">Kirim Link Reset</h3>
+                <p class="text-xs text-slate-500 leading-5 mt-1">Buka tombol edit user, lalu kirim link reset password ke email user yang masih aktif.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 border border-rose-100 flex items-center justify-center shrink-0">
+                <i class="fas fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <p class="text-xs font-extrabold uppercase tracking-wide text-slate-400">Email Tidak Aktif</p>
+                <h3 class="font-extrabold text-slate-900 mt-0.5">Buat Akun Baru</h3>
+                <p class="text-xs text-slate-500 leading-5 mt-1">Jika email lama tidak bisa menerima reset password, nonaktifkan akun lama lalu buat user baru dengan email aktif.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+        >
+          <div
+            class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+          >
+            <div class="flex items-center gap-2 text-sm">
+              <span
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-bold"
+              >
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sistem
+                Akses
+              </span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-sm">
+              <thead
+                class="bg-slate-100 text-slate-700 font-extrabold uppercase text-[11px] border-b border-slate-200 tracking-wide"
+              >
+                <tr>
+                  <th class="p-4 w-12 text-center">No</th>
+                  <th class="p-4">Nama Lengkap</th>
+                  <th class="p-4">Email</th>
+                  <th class="p-4 w-40">Role</th>
+                  <th class="p-4 w-36">Status</th>
+                  <th class="p-4 w-64 text-center" id="thAksi">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="6" class="p-10 text-center text-slate-400">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i> Memuat data
+                    user...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      id="addUserModal"
+      class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center backdrop-blur-sm p-4"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all border border-slate-200"
+      >
+        <div
+          class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center"
+        >
+          <div class="flex items-center gap-2">
+            <div
+              class="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100"
+            >
+              <i class="fas fa-user-plus"></i>
+            </div>
+            <h3 class="font-extrabold text-slate-900">Tambah User Baru</h3>
+          </div>
+          <button
+            onclick="window.closeAddModal()"
+            class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-white transition"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <form id="addUserForm" class="space-y-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Nama Lengkap</label
+              ><input
+                type="text"
+                id="addName"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none"
+                placeholder="Contoh: Budi Santoso"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Email</label
+              ><input
+                type="email"
+                id="addEmail"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none"
+                placeholder="nama@company.com"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Password Default</label
+              ><input
+                type="password"
+                id="addPass"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none"
+                placeholder="Minimal 6 karakter"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Role</label
+              >
+              <select
+                id="addRole"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none font-semibold text-slate-700"
+              >
+                <option value="viewer">Viewer (Lihat Saja)</option>
+                <option value="admin">Admin (Full Akses)</option>
+                <option value="contractor">Kontraktor</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onclick="window.handleAddUser()"
+              id="submitAddBtn"
+              class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-2.5 rounded-xl font-extrabold text-sm transition shadow-sm"
+            >
+              Buat Akun
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="editUserModal"
+      class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center backdrop-blur-sm p-4"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all border border-slate-200"
+      >
+        <div
+          class="px-6 py-4 border-b bg-slate-50 flex justify-between items-center"
+        >
+          <div class="flex items-center gap-2">
+            <div
+              class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100"
+            >
+              <i class="fas fa-user-pen"></i>
+            </div>
+            <h3 class="font-extrabold text-slate-900">Edit Data User</h3>
+          </div>
+          <button
+            onclick="window.closeEditModal()"
+            class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-white transition"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <input type="hidden" id="editUid" />
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Nama Lengkap</label
+              ><input
+                type="text"
+                id="editName"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Email (Database)</label
+              ><input
+                type="email"
+                id="editEmail"
+                class="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-600 outline-none"
+                readonly
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1"
+                >Role</label
+              >
+              <select
+                id="editRole"
+                class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none font-semibold text-slate-700"
+              >
+                <option value="viewer">Viewer</option>
+                <option value="admin">Admin</option>
+                <option value="contractor">Kontraktor</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold text-slate-600 mb-1">Status Akses</label>
+              <div id="editStatusInfo" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 font-semibold">
+                -
+              </div>
+            </div>
+            <div class="border-t border-slate-100 pt-4">
+              <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-100">
+                <p class="text-xs text-amber-800 font-extrabold mb-2">
+                  Lupa Password?
+                </p>
+                <button
+                  type="button"
+                  onclick="window.handleResetPassword()"
+                  class="w-full bg-white border border-amber-200 text-amber-800 hover:bg-amber-100 py-2 rounded-xl text-xs font-extrabold transition"
+                >
+                  <i class="fas fa-envelope mr-1"></i> Kirim Link Reset ke Email
+                </button>
+                <p class="mt-2 text-[11px] leading-4 text-amber-700">
+                  Jika email user sudah tidak aktif, nonaktifkan akun lama lalu buat user baru dengan email aktif. Jangan hapus permanen kecuali lewat Firebase Console.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="window.handleSaveEdit()"
+              id="submitEditBtn"
+              class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-2.5 rounded-xl font-extrabold text-sm transition shadow-sm"
+            >
+              Simpan Perubahan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.openAddModal = () =>
+        document.getElementById("addUserModal").classList.remove("hidden");
+      window.closeAddModal = () =>
+        document.getElementById("addUserModal").classList.add("hidden");
+      window.closeEditModal = () =>
+        document.getElementById("editUserModal").classList.add("hidden");
+    </script>
+
+    <script type="module">
+      import {
+        initializeApp,
+        deleteApp,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        sendPasswordResetEmail,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import {
+        collection,
+        query,
+        where,
+        getDocs,
+        getDoc,
+        doc,
+        setDoc,
+        updateDoc,
+        deleteDoc,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import {
+        firebaseConfig,
+        auth as mainAuth,
+        db,
+      } from "./firebase-config.js";
+
+      window.currentUserRole = "viewer"; // Default Aman
+      window.currentUserUid = null;
+
+      window.isUserActive = (userData = {}) => {
+        return userData.active !== false && userData.status !== "inactive";
+      };
+
+      window.escapeHtml = (value) =>
+        String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+
+      window.openEditModal = (encodedUser) => {
+        if (window.currentUserRole !== "admin") return alert("Akses Ditolak");
+        const user = JSON.parse(decodeURIComponent(encodedUser));
+        document.getElementById("editUid").value = user.uid || "";
+        document.getElementById("editName").value = user.name || "";
+        document.getElementById("editEmail").value = user.email || "";
+        document.getElementById("editRole").value = user.role || "viewer";
+        const active = window.isUserActive(user);
+        const info = document.getElementById("editStatusInfo");
+        if (info) {
+          info.innerHTML = active
+            ? `<span class="text-emerald-700"><i class="fas fa-circle-check mr-1"></i> Aktif - user masih bisa login dan mengakses sistem.</span>`
+            : `<span class="text-rose-700"><i class="fas fa-circle-xmark mr-1"></i> Nonaktif - user tidak boleh mengakses sistem.</span>`;
+        }
+        document.getElementById("editUserModal").classList.remove("hidden");
+      };
+
+      window.loadUsers = async () => {
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading...</td></tr>`;
+
+        try {
+          const querySnapshot = await getDocs(collection(db, "users"));
+          tbody.innerHTML = "";
+          let index = 1;
+
+          if (querySnapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400">Tidak ada data user.</td></tr>`;
+            return;
+          }
+
+          querySnapshot.forEach((docSnap) => {
+            const user = docSnap.data();
+            const uid = docSnap.id;
+            const role = String(user.role || "viewer").toLowerCase();
+            const isActive = window.isUserActive(user);
+
+            let badgeClass =
+              "bg-slate-100 text-slate-700 border border-slate-200";
+            if (role === "admin")
+              badgeClass = "bg-blue-50 text-blue-700 border border-blue-200";
+            if (role === "contractor")
+              badgeClass =
+                "bg-orange-50 text-orange-700 border border-orange-200";
+
+            const statusBadge = isActive
+              ? `<span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Aktif</span>`
+              : `<span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase bg-rose-50 text-rose-700 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Nonaktif</span>`;
+
+            const safeUser = encodeURIComponent(
+              JSON.stringify({ uid, ...user }),
+            );
+
+            let actionButtons = `<td class="p-4 text-center text-slate-400 text-xs italic">Akses Terbatas</td>`;
+
+            if (window.currentUserRole === "admin") {
+              const isSelf = uid === window.currentUserUid;
+              const toggleLabel = isActive ? "Nonaktifkan" : "Aktifkan";
+              const toggleIcon = isActive ? "fa-user-slash" : "fa-user-check";
+              const toggleClass = isActive
+                ? "text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border-rose-100"
+                : "text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border-emerald-100";
+
+              actionButtons = `
+                  <td class="p-4 text-center whitespace-nowrap">
+                    <button onclick="window.openEditModal('${safeUser}')" class="text-blue-700 hover:text-blue-900 mx-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-xl" title="Edit"><i class="fas fa-edit"></i></button>
+                    <button onclick="window.toggleUserActive('${uid}', '${window.escapeHtml(user.email || '')}', ${isActive})" class="${toggleClass} mx-1 px-3 py-2 border rounded-xl disabled:opacity-40 disabled:cursor-not-allowed" title="${toggleLabel}" ${isSelf ? "disabled" : ""}><i class="fas ${toggleIcon}"></i></button>
+                    <button onclick="window.showPermanentDeleteGuide('${uid}', '${window.escapeHtml(user.email || '')}')" class="text-slate-700 hover:text-slate-900 mx-1 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl" title="Panduan Hapus Permanen"><i class="fas fa-circle-info"></i></button>
+                  </td>`;
+            }
+
+            const tr = document.createElement("tr");
+            tr.className = `hover:bg-slate-50 transition align-middle ${isActive ? "" : "bg-slate-50 opacity-80"}`;
+            tr.innerHTML = `
+              <td class="p-4 text-center text-slate-500 font-mono text-xs">${index++}</td>
+              <td class="p-4 font-bold text-slate-800">${window.escapeHtml(user.name || "-")}</td>
+              <td class="p-4 font-medium text-slate-600">${window.escapeHtml(user.email || "-")}</td>
+              <td class="p-4">
+                <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase ${badgeClass}">
+                  <span class="w-1.5 h-1.5 rounded-full ${role === "admin" ? "bg-blue-600" : role === "contractor" ? "bg-orange-600" : "bg-slate-500"}"></span>
+                  ${window.escapeHtml(role)}
+                </span>
+              </td>
+              <td class="p-4">${statusBadge}</td>
+              ${actionButtons}
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Gagal load users:", err);
+          tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center bg-rose-50 text-rose-600 font-bold rounded-xl border border-rose-200">Gagal mengambil data. Pastikan Firebase Rules Anda sudah benar. <br><span class="text-xs font-normal">Error: ${err.message}</span></td></tr>`;
+        }
+      };
+
+      // FUNGSI ADMIN SAJA (Hanya akan dipanggil jika tombolnya muncul)
+      window.handleAddUser = async () => {
+        if (window.currentUserRole !== "admin") return alert("Akses Ditolak");
+
+        const btn = document.getElementById("submitAddBtn");
+        const name = document.getElementById("addName").value;
+        const email = document.getElementById("addEmail").value;
+        const pass = document.getElementById("addPass").value;
+        const role = document.getElementById("addRole").value;
+
+        if (!email || !pass || !name) return alert("Semua kolom wajib diisi!");
+
+        btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Memproses...`;
+        btn.disabled = true;
+
+        try {
+          const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+          const secondaryAuth = getAuth(secondaryApp);
+          const userCredential = await createUserWithEmailAndPassword(
+            secondaryAuth,
+            email,
+            pass,
+          );
+
+          await setDoc(doc(db, "users", userCredential.user.uid), {
+            name: name,
+            email: email,
+            role: role,
+            active: true,
+            status: "active",
+            created_at: new Date().toISOString(),
+          });
+
+          await signOut(secondaryAuth);
+          await deleteApp(secondaryApp);
+
+          alert(`Sukses! Akun ${name} berhasil dibuat.`);
+          window.closeAddModal();
+          window.loadUsers();
+          document.getElementById("addUserForm").reset();
+        } catch (err) {
+          alert("Gagal membuat user: " + err.message);
+        } finally {
+          btn.innerText = "Buat Akun";
+          btn.disabled = false;
+        }
+      };
+
+      window.handleSaveEdit = async () => {
+        if (window.currentUserRole !== "admin") return alert("Akses Ditolak");
+
+        const btn = document.getElementById("submitEditBtn");
+        const uid = document.getElementById("editUid").value;
+        const name = document.getElementById("editName").value;
+        const role = document.getElementById("editRole").value;
+
+        btn.innerText = "Menyimpan...";
+        btn.disabled = true;
+
+        try {
+          await updateDoc(doc(db, "users", uid), { name: name, role: role, updated_at: new Date().toISOString() });
+          alert("Data berhasil diperbarui!");
+          window.closeEditModal();
+          window.loadUsers();
+        } catch (e) {
+          alert("Gagal update: " + e.message);
+        } finally {
+          btn.innerText = "Simpan Perubahan";
+          btn.disabled = false;
+        }
+      };
+
+      window.handleResetPassword = async () => {
+        if (window.currentUserRole !== "admin") return alert("Akses Ditolak");
+        const email = document.getElementById("editEmail").value;
+        if (!email) return alert("Email tidak valid.");
+
+        if (confirm(`Kirim link reset password ke ${email}?`)) {
+          try {
+            await sendPasswordResetEmail(mainAuth, email);
+            alert("Link reset password telah dikirim.");
+          } catch (e) {
+            alert("Gagal kirim link: " + e.message);
+          }
+        }
+      };
+
+      window.toggleUserActive = async (uid, email, currentlyActive) => {
+        if (window.currentUserRole !== "admin") return alert("Akses Ditolak");
+        if (uid === window.currentUserUid) return alert("Admin tidak bisa menonaktifkan akun sendiri.");
+
+        const nextActive = !currentlyActive;
+        const actionText = nextActive ? "AKTIFKAN" : "NONAKTIFKAN";
+        const confirmText = nextActive
+          ? `Aktifkan kembali akses untuk ${email}?`
+          : `Nonaktifkan user ${email}? User tidak akan bisa mengakses dashboard sampai diaktifkan kembali.`;
+
+        if (!confirm(confirmText)) return;
+
+        try {
+          await updateDoc(doc(db, "users", uid), {
+            active: nextActive,
+            status: nextActive ? "active" : "inactive",
+            updated_at: new Date().toISOString(),
+            ...(nextActive
+              ? { reactivated_at: new Date().toISOString() }
+              : { disabled_at: new Date().toISOString() }),
+          });
+          alert(`User berhasil di-${actionText.toLowerCase()}.`);
+          window.loadUsers();
+        } catch (e) {
+          alert("Gagal mengubah status user: " + e.message);
+        }
+      };
+
+      window.showPermanentDeleteGuide = (uid, email) => {
+        alert(
+          `Hapus permanen tidak bisa dilakukan aman dari frontend saja.\n\n` +
+            `Untuk benar-benar menghapus semua data login user ${email}:\n` +
+            `1. Buka Firebase Console > Authentication > Users.\n` +
+            `2. Cari email user tersebut.\n` +
+            `3. Delete user dari Firebase Authentication.\n` +
+            `4. Hapus / arsipkan dokumen users/${uid} di Firestore jika memang tidak diperlukan untuk audit.\n\n` +
+            `Rekomendasi untuk audit: gunakan Nonaktifkan User, bukan hapus permanen, agar histori akses tetap tercatat. Jika email lama sudah tidak aktif, nonaktifkan akun lama lalu buat akun baru dengan email aktif.`,
+        );
+      };
+
+      window.deleteUserAccess = async (uid, email) => {
+        if (window.currentUserRole !== "admin") return alert("Akses Ditolak");
+        alert("Fitur hapus akses langsung diganti menjadi Nonaktifkan User agar email tidak menggantung di Firebase Authentication.");
+      };
+
+      // INIT & SECURITY CHECKER
+      mainAuth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          window.currentUserUid = user.uid;
+          let userData = null;
+
+          // Prefer dokumen users/{uid}; fallback email untuk data lama.
+          const directSnap = await getDoc(doc(db, "users", user.uid));
+          if (directSnap.exists()) {
+            userData = directSnap.data();
+          } else {
+            const q = query(collection(db, "users"), where("email", "==", user.email));
+            const snap = await getDocs(q);
+            if (!snap.empty) userData = snap.docs[0].data();
+          }
+
+          if (userData) {
+            if (!window.isUserActive(userData)) {
+              alert("Akun Anda sedang nonaktif. Hubungi administrator.");
+              await signOut(mainAuth);
+              window.location.href = "index.html";
+              return;
+            }
+            if (userData.role) window.currentUserRole = String(userData.role).toLowerCase();
+          } else {
+            // Fallback khusus jika DB Users masih kosong tapi mau di-setup pertama kali
+            if (user.email === "admin@gmail.com") window.currentUserRole = "admin";
+          }
+        } catch (e) {
+          console.error("Gagal membaca role:", e);
+        }
+
+        // Terapkan Aturan UI Berdasarkan Role
+        if (window.currentUserRole === "admin") {
+          // Admin bisa melihat tombol Tambah & Kolom Aksi
+          document.getElementById("btnTambahUser").classList.remove("hidden");
+          document.getElementById("btnTambahUser").classList.add("flex");
+        } else {
+          // Selain Admin, Sembunyikan Menu Admin Console di Sidebar
+          const adminMenu = document.getElementById("adminMenuSidebar");
+          if (adminMenu) adminMenu.classList.add("hidden");
+
+          // Beri tahu User bahwa ia bukan admin
+          alert(
+            `Akses Ditolak! Anda masuk sebagai '${window.currentUserRole.toUpperCase()}'. Halaman ini khusus Administrator.`,
+          );
+          window.location.href = "dashboard.html";
+          return;
+        }
+
+        // Jika lolos pengecekan (Berarti Admin), muat tabel
+        window.loadUsers();
+      });
+    </script>
+  </body>
+</html>

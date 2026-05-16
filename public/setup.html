@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Setup - ProyekApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="ui.css?v=setup-no-report-mk-1" />
+    <style>
+      body { font-family: "Inter", sans-serif; }
+      .nav-item.active { background-color: #eff6ff; color: #2563eb; border-right: 3px solid #2563eb; }
+      .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden transition-opacity"></div>
+
+    <div class="flex h-screen overflow-hidden">
+      <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col rounded-none">
+        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg"><i class="fas fa-building"></i></div>
+            <span class="font-bold text-lg tracking-tight text-slate-800">Proyek<span class="text-blue-600">App</span></span>
+          </div>
+          <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+          <p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Main Menu</p>
+          <a href="dashboard.html" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"><i class="fas fa-th-large w-6 text-center mr-2"></i> Dashboard</a>
+          <a href="documents.html" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"><i class="fas fa-folder-open w-6 text-center mr-2"></i> Dokumen</a>
+          <div id="adminMenu" class="hidden mt-6">
+            <p class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Admin Console</p>
+            <a href="users.html" class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"><i class="fas fa-users-cog w-6 text-center mr-2"></i> User Management</a>
+            <a href="setup.html" class="nav-item active flex items-center px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 transition-colors"><i class="fas fa-sliders w-6 text-center mr-2"></i> Project Setup</a>
+          </div>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-slate-200"><i class="fas fa-user"></i></div>
+            <div class="flex-1 min-w-0">
+              <p id="userEmail" class="text-sm font-medium text-slate-900 truncate">Loading...</p>
+              <p id="userRole" class="text-xs text-slate-500 truncate">...</p>
+            </div>
+            <button id="logoutBtn" class="text-slate-400 hover:text-red-600 transition" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="flex-1 flex flex-col lg:ml-64 overflow-hidden transition-all duration-300">
+        <header class="h-16 bg-white border-b border-slate-200 flex justify-between items-center px-4 lg:px-8 shadow-sm rounded-none">
+          <div class="flex items-center gap-4">
+            <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-blue-600 p-2"><i class="fas fa-bars text-xl"></i></button>
+            <div class="flex items-center text-sm text-slate-500"><span class="hidden md:inline">Portal</span><i class="fas fa-chevron-right text-xs mx-2 hidden md:inline"></i><span class="font-bold text-slate-800">Project Setup</span></div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnTest" onclick="window.testCurrentConfig()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2 transition"><i class="fas fa-vial"></i><span class="hidden sm:inline">Test Folder</span></button>
+            <button id="btnSave" onclick="window.saveProjectSetup()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2 transition"><i class="fas fa-save"></i><span class="hidden sm:inline">Simpan Setup</span></button>
+          </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 lg:p-8 space-y-6">
+          <section class="setup-hero">
+            <div class="setup-hero-badge"><i class="fas fa-lock"></i> Admin Only</div>
+            <h1>Setup Folder Project</h1>
+            <p>Admin dapat mengatur folder Google Drive per proyek. Kategori dokumen di halaman Dokumen akan mengikuti konfigurasi di sini, tanpa edit HTML atau Apps Script untuk project baru.</p>
+          </section>
+
+          <section class="setup-section">
+            <div class="setup-section-head">
+              <div>
+                <h2>Informasi Project</h2>
+                <p>Konfigurasi dasar untuk website project ini.</p>
+              </div>
+              <div id="saveStatus" class="text-xs font-bold text-slate-500">Memuat setup...</div>
+            </div>
+            <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <label class="setup-field"><span>Project ID</span><input id="projectId" type="text" placeholder="project_001" /></label>
+              <label class="setup-field"><span>Nama Project</span><input id="projectName" type="text" placeholder="Contoh: Pembangunan Gedung ABC" /></label>
+              <label class="setup-field lg:col-span-2"><span>Apps Script Web App URL</span><input id="appsScriptUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+            </div>
+          </section>
+
+          <section class="setup-section">
+            <div class="setup-section-head"><div><h2>Media Project</h2><p>Folder untuk foto, video, dan SketchUp/3D.</p></div></div>
+            <div class="setup-grid" id="mediaFolderFields"></div>
+          </section>
+
+          <section class="setup-section">
+            <div class="setup-section-head">
+              <div>
+                <h2>Preview RKM</h2>
+                <p>Folder Rapat Kerja Mingguan yang digunakan untuk preview file terbaru di halaman Dokumen.</p>
+              </div>
+            </div>
+            <div class="setup-grid" id="reportFolderFields"></div>
+          </section>
+
+          <section class="setup-section">
+            <div class="setup-section-head">
+              <div>
+                <h2>Kategori Folder Dokumen</h2>
+                <p>Tambah, hapus, atau ubah kategori sesuai kebutuhan project. Kartu di halaman Dokumen akan otomatis mengikuti daftar ini.</p>
+              </div>
+              <button onclick="window.addDocumentCategoryRow()" class="setup-add-btn"><i class="fas fa-plus"></i> Tambah Kategori</button>
+            </div>
+            <div class="px-5 pb-5 space-y-3" id="documentCategoryRows"></div>
+          </section>
+
+          <section class="setup-section">
+            <div class="setup-section-head"><div><h2>Folder Surat</h2><p>Folder surat hanya dipakai untuk tombol buka Drive. Tidak ikut Sync Drive.</p></div></div>
+            <div class="setup-grid" id="mailFolderFields"></div>
+          </section>
+
+          <section id="testResultCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+              <div><h2 class="text-lg font-black text-slate-900">Hasil Test Folder</h2><p class="text-xs text-slate-500 mt-1">Validasi akses Apps Script ke folder Google Drive.</p></div>
+              <span id="testSummary" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-black">-</span>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-sm text-left setup-test-table"><thead><tr><th>Area</th><th>Folder ID</th><th>Status</th><th>Nama Folder / Error</th></tr></thead><tbody id="testTableBody"></tbody></table>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      window.toggleSidebar = () => {
+        document.getElementById("sidebar").classList.toggle("-translate-x-full");
+        document.getElementById("sidebarOverlay").classList.toggle("hidden");
+      };
+    </script>
+
+    <script type="module">
+      import { doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { auth, db } from "./firebase-config.js";
+
+      const DEFAULT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxovFmLB1tq-C9qvQvFS85lfO1nMby8fHxt5tc9U7eUVV8lDx5sDb4TTbMKCIXf0miGLg/exec";
+      const COLOR_OPTIONS = ["indigo", "blue", "teal", "emerald", "orange", "purple", "sky", "red", "slate"];
+      const FIXED_GROUPS = {
+        mediaFolders: [["photo", "Folder Foto"], ["video", "Folder Video"], ["sketchup", "Folder SketchUp / 3D"]],
+        reportFolders: [["kontraktor", "Folder RKM / Rapat Kerja Mingguan"]],
+        mailFolders: [["Surat Masuk", "Folder Surat Masuk"], ["Surat Keluar", "Folder Surat Keluar"]],
+      };
+      const DEFAULT_DOCUMENT_CATEGORIES = [
+        { id: "rkm", name: "RKM", badge: "RKM", color: "indigo", active: true, order: 1, folderId: "1kelZSuQhXbIzVL_BiZAUMswgsrud2Aih" },
+        { id: "administrasi", name: "Administrasi", badge: "ADM", color: "blue", active: true, order: 2, folderId: "1xGlov1yA9BJ_FWHmFM9hR9SBjJutn6DF" },
+        { id: "uji-mutu", name: "Uji Mutu", badge: "LAB", color: "teal", active: true, order: 3, folderId: "1IgsL99oKaAzhUkQQza8Tlv6YyvGFeu4q" },
+        { id: "checklist-bangunan", name: "Checklist Bangunan Gedung", badge: "CHK", color: "slate", active: true, order: 4, folderId: "1huVf3wVUz5n6by9Ixs0gWYB0JTCLxBZF" },
+        { id: "material-approval", name: "Progress Material Approval", badge: "MAT", color: "orange", active: true, order: 5, folderId: "1brs9bWgUu9dN6EJCi2jjERISjnK-kD49" },
+        { id: "shop-drawing", name: "Progress Shop Drawing", badge: "DWG", color: "purple", active: true, order: 6, folderId: "1S0ZcnJUrXivP-KAWXkHSlBNLVAmcZoDm" },
+        { id: "rfi", name: "LIst & Status RFI", badge: "RFI", color: "indigo", active: true, order: 7, folderId: "1ZDYGEej8KBDOMFUn-KRH5uRysZY9oG3h" },
+        { id: "mc0", name: "Progress MC-0", badge: "MC", color: "emerald", active: true, order: 8, folderId: "1ULlb7FeRzKmU2EKWgOo8nmSbXompHEwB" },
+        { id: "addendum", name: "Addendum", badge: "ADD", color: "slate", active: true, order: 9, folderId: "1WgYwwIEcuddA_JnCvD5dLTqPqAF6p0Tp" },
+        { id: "tkdn", name: "Progres Perhitungan TKDN", badge: "TKDN", color: "sky", active: true, order: 10, folderId: "1PQfinUP7qLp-oLYmv6jwRsmera7fzEqb" },
+        { id: "hse", name: "HSE/K3", badge: "K3", color: "red", active: true, order: 11, folderId: "1zVO6eS6YRz1ZLi4pZlvtsV99dpFaUUy7" },
+        { id: "evaluasi", name: "Laporan Evaluasi Kinerja", badge: "EV", color: "slate", active: true, order: 12, folderId: "1oMbnL2ijn_zPsR3meI_clgoD_YKbYH4L" },
+      ];
+
+      let currentUserRole = "viewer";
+      let currentUserEmail = "";
+      let documentRowCounter = 0;
+
+      function extractDriveFolderId(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+        const patterns = [/\/folders\/([a-zA-Z0-9_-]+)/, /\/file\/d\/([a-zA-Z0-9_-]+)/, /[?&]id=([a-zA-Z0-9_-]+)/, /^([a-zA-Z0-9_-]{20,})$/];
+        for (const pattern of patterns) {
+          const match = raw.match(pattern);
+          if (match?.[1]) return match[1];
+        }
+        return raw;
+      }
+
+      function driveFolderUrl(folderIdOrUrl) {
+        const id = extractDriveFolderId(folderIdOrUrl);
+        return id ? `https://drive.google.com/drive/folders/${id}` : "";
+      }
+
+      function slugify(value) {
+        return String(value || "kategori").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "kategori";
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+
+      function fieldId(group, key) {
+        return `${group}__${btoa(unescape(encodeURIComponent(key))).replace(/=/g, "")}`;
+      }
+
+      function buildFixedFolderInputs() {
+        const targetMap = { mediaFolders: "mediaFolderFields", reportFolders: "reportFolderFields", mailFolders: "mailFolderFields" };
+        Object.entries(targetMap).forEach(([group, containerId]) => {
+          const container = document.getElementById(containerId);
+          container.innerHTML = FIXED_GROUPS[group].map(([key, label]) => `
+            <label class="setup-field">
+              <span>${label}</span>
+              <input id="${fieldId(group, key)}" data-group="${group}" data-key="${key}" type="text" placeholder="Paste link folder Google Drive" />
+            </label>
+          `).join("");
+        });
+      }
+
+      function normalizeCategoriesFromConfig(config = {}) {
+        if (Array.isArray(config.documentCategories) && config.documentCategories.length) {
+          return config.documentCategories.map((cat, idx) => ({
+            id: cat.id || slugify(cat.name || `kategori-${idx + 1}`),
+            name: cat.name || `Kategori ${idx + 1}`,
+            badge: cat.badge || String(cat.name || "DOC").slice(0, 4).toUpperCase(),
+            color: COLOR_OPTIONS.includes(cat.color) ? cat.color : "slate",
+            active: cat.active !== false,
+            order: Number(cat.order || idx + 1),
+            folderId: extractDriveFolderId(cat.folderId || cat.folderUrl || ""),
+          }));
+        }
+        const map = config.documentFolders || {};
+        const fromMap = Object.keys(map).map((name, idx) => ({
+          id: slugify(name), name, badge: String(name).slice(0, 4).toUpperCase(), color: COLOR_OPTIONS[idx % COLOR_OPTIONS.length], active: true, order: idx + 1, folderId: extractDriveFolderId(map[name]),
+        }));
+        return fromMap.length ? fromMap : DEFAULT_DOCUMENT_CATEGORIES;
+      }
+
+      window.addDocumentCategoryRow = (category = {}) => {
+        const container = document.getElementById("documentCategoryRows");
+        const idx = ++documentRowCounter;
+        const colorOptions = COLOR_OPTIONS.map((c) => `<option value="${c}" ${category.color === c ? "selected" : ""}>${c}</option>`).join("");
+        const row = document.createElement("div");
+        row.className = "document-category-row";
+        row.dataset.row = String(idx);
+        row.innerHTML = `
+          <div class="setup-field compact"><span>Nama Kategori</span><input data-doc-field="name" value="${escapeHtml(category.name || "")}" placeholder="Contoh: Dokumen Audit" /></div>
+          <div class="setup-field compact"><span>Badge</span><input data-doc-field="badge" value="${escapeHtml(category.badge || "")}" placeholder="AUD" maxlength="8" /></div>
+          <div class="setup-field compact"><span>Warna</span><select data-doc-field="color">${colorOptions}</select></div>
+          <div class="setup-field compact"><span>Folder Drive</span><input data-doc-field="folder" value="${escapeHtml(driveFolderUrl(category.folderId || category.folderUrl) || category.folderId || "")}" placeholder="Paste link folder" /></div>
+          <label class="doc-active-toggle"><input type="checkbox" data-doc-field="active" ${category.active === false ? "" : "checked"} /><span>Aktif</span></label>
+          <button type="button" class="doc-row-delete" onclick="this.closest('.document-category-row').remove()" title="Hapus kategori"><i class="fas fa-trash"></i></button>
+        `;
+        container.appendChild(row);
+      };
+
+      function renderDocumentCategoryRows(categories) {
+        const container = document.getElementById("documentCategoryRows");
+        container.innerHTML = "";
+        documentRowCounter = 0;
+        categories.forEach((cat) => window.addDocumentCategoryRow(cat));
+      }
+
+      function jsonpRequest(url, params = {}) {
+        return new Promise((resolve, reject) => {
+          if (!url) return reject(new Error("Apps Script URL wajib diisi."));
+          const callbackName = `__proyekapp_setup_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          const script = document.createElement("script");
+          const clean = () => { delete window[callbackName]; script.remove(); };
+          window[callbackName] = (data) => { clean(); resolve(data); };
+          script.onerror = () => { clean(); reject(new Error("Gagal koneksi ke Apps Script.")); };
+          const qs = new URLSearchParams({ ...params, callback: callbackName });
+          script.src = `${url}${url.includes("?") ? "&" : "?"}${qs.toString()}`;
+          document.body.appendChild(script);
+        });
+      }
+
+      function isUserActive(userData = {}) {
+        return userData.active !== false && userData.status !== "inactive";
+      }
+
+      async function getUserProfile(user) {
+        try {
+          const byUid = await getDoc(doc(db, "users", user.uid));
+          if (byUid.exists()) {
+            const data = byUid.data();
+            return { role: String(data.role || "viewer").toLowerCase(), active: isUserActive(data) };
+          }
+        } catch (err) {}
+        try {
+          const q = query(collection(db, "users"), where("email", "==", user.email));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            const data = snap.docs[0].data();
+            return { role: String(data.role || "viewer").toLowerCase(), active: isUserActive(data) };
+          }
+        } catch (err) {}
+        if (user.email === "admin@gmail.com") return { role: "admin", active: true };
+        return { role: "viewer", active: true };
+      }
+
+      function readDocumentCategories() {
+        return Array.from(document.querySelectorAll(".document-category-row")).map((row, idx) => {
+          const get = (field) => row.querySelector(`[data-doc-field="${field}"]`);
+          const name = (get("name")?.value || "").trim();
+          const badge = (get("badge")?.value || name.slice(0, 4).toUpperCase()).trim().toUpperCase();
+          return {
+            id: slugify(name || `kategori-${idx + 1}`),
+            name,
+            badge,
+            color: get("color")?.value || "slate",
+            active: !!get("active")?.checked,
+            order: idx + 1,
+            folderId: extractDriveFolderId(get("folder")?.value || ""),
+          };
+        }).filter((cat) => cat.name);
+      }
+
+      function readFormConfig() {
+        const config = {
+          projectId: document.getElementById("projectId").value.trim() || "project_001",
+          projectName: document.getElementById("projectName").value.trim() || "Proyek Dashboard",
+          appsScriptUrl: document.getElementById("appsScriptUrl").value.trim() || DEFAULT_APPS_SCRIPT_URL,
+          mediaFolders: {}, reportFolders: {}, mailFolders: {}, documentCategories: [], documentFolders: {},
+        };
+        document.querySelectorAll("input[data-group][data-key]").forEach((input) => {
+          config[input.dataset.group][input.dataset.key] = extractDriveFolderId(input.value);
+        });
+        config.documentCategories = readDocumentCategories();
+        config.documentCategories.forEach((cat) => { if (cat.active !== false) config.documentFolders[cat.name] = cat.folderId; });
+        return config;
+      }
+
+      function fillForm(config = {}) {
+        document.getElementById("projectId").value = config.projectId || "project_001";
+        document.getElementById("projectName").value = config.projectName || "Proyek Dashboard";
+        document.getElementById("appsScriptUrl").value = config.appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
+        Object.keys(FIXED_GROUPS).forEach((group) => {
+          FIXED_GROUPS[group].forEach(([key]) => {
+            const el = document.getElementById(fieldId(group, key));
+            const val = config?.[group]?.[key] || "";
+            if (el) el.value = driveFolderUrl(val) || val;
+          });
+        });
+        renderDocumentCategoryRows(normalizeCategoriesFromConfig(config));
+      }
+
+      async function loadExistingSetup() {
+        try {
+          const snap = await getDoc(doc(db, "project_settings", "default"));
+          if (snap.exists()) {
+            fillForm(snap.data());
+            document.getElementById("saveStatus").innerHTML = `<span class="text-emerald-700">Setup tersimpan: ${snap.data().updated_at ? new Date(snap.data().updated_at).toLocaleString("id-ID") : "-"}</span>`;
+          } else {
+            fillForm({ appsScriptUrl: DEFAULT_APPS_SCRIPT_URL, documentCategories: DEFAULT_DOCUMENT_CATEGORIES });
+            document.getElementById("saveStatus").innerText = "Setup belum dibuat.";
+          }
+        } catch (err) {
+          console.error(err);
+          fillForm({ appsScriptUrl: DEFAULT_APPS_SCRIPT_URL, documentCategories: DEFAULT_DOCUMENT_CATEGORIES });
+          document.getElementById("saveStatus").innerHTML = `<span class="text-rose-600">Gagal membaca setup dari Firestore.</span>`;
+        }
+      }
+
+      window.saveProjectSetup = async () => {
+        if (currentUserRole !== "admin") return alert("Akses ditolak. Hanya admin yang bisa menyimpan setup.");
+        const btn = document.getElementById("btnSave");
+        const status = document.getElementById("saveStatus");
+        const config = readFormConfig();
+        if (!config.appsScriptUrl.includes("script.google.com/macros/s/")) return alert("Apps Script Web App URL tidak valid.");
+        if (!config.documentCategories.some((c) => c.active && c.folderId)) return alert("Minimal satu kategori dokumen aktif harus punya folder Drive.");
+        btn.disabled = true; btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...`;
+        status.innerHTML = `<span class="text-blue-700">Menyimpan setup...</span>`;
+        try {
+          const appscriptPayload = {
+            projectName: config.projectName,
+            mediaFolders: config.mediaFolders,
+            reportFolders: config.reportFolders,
+            documentCategories: config.documentCategories,
+            documentFolders: config.documentFolders,
+            mailFolders: config.mailFolders,
+          };
+          const result = await jsonpRequest(config.appsScriptUrl, { action: "saveConfig", config: JSON.stringify(appscriptPayload) });
+          if (!result?.ok) throw new Error(result?.error || "Apps Script gagal menyimpan config.");
+          await setDoc(doc(db, "project_settings", "default"), { ...config, updated_at: new Date().toISOString(), updated_by: currentUserEmail }, { merge: true });
+          status.innerHTML = `<span class="text-emerald-700">Setup berhasil disimpan.</span>`;
+          alert("Setup berhasil disimpan. Halaman Dokumen sekarang mengikuti kategori folder terbaru.");
+        } catch (err) {
+          console.error(err);
+          status.innerHTML = `<span class="text-rose-600">Gagal menyimpan setup.</span>`;
+          alert("Gagal menyimpan setup: " + err.message);
+        } finally {
+          btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i><span class="hidden sm:inline">Simpan Setup</span>`;
+        }
+      };
+
+      window.testCurrentConfig = async () => {
+        if (currentUserRole !== "admin") return alert("Akses ditolak.");
+        const btn = document.getElementById("btnTest");
+        const config = readFormConfig();
+        const card = document.getElementById("testResultCard");
+        const tbody = document.getElementById("testTableBody");
+        const summary = document.getElementById("testSummary");
+        btn.disabled = true; btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Testing...`;
+        card.classList.remove("hidden"); tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">Mengecek folder...</td></tr>`; summary.innerText = "Testing...";
+        try {
+          const result = await jsonpRequest(config.appsScriptUrl, { action: "testConfig", config: JSON.stringify({ mediaFolders: config.mediaFolders, reportFolders: config.reportFolders, documentCategories: config.documentCategories, documentFolders: config.documentFolders, mailFolders: config.mailFolders }) });
+          if (!result?.ok) throw new Error(result?.error || "Test gagal.");
+          summary.className = `px-3 py-1 rounded-full text-xs font-black ${result.invalid ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`;
+          summary.innerText = `${result.valid}/${result.total} valid`;
+          tbody.innerHTML = (result.checks || []).map((item) => `
+            <tr><td class="font-bold text-slate-800">${escapeHtml(item.label)}</td><td class="font-mono text-xs text-slate-500">${escapeHtml(item.folderId || "-")}</td><td>${item.valid ? '<span class="setup-status-ok">Valid</span>' : '<span class="setup-status-bad">Perlu dicek</span>'}</td><td class="text-xs ${item.valid ? "text-slate-600" : "text-rose-600"}">${escapeHtml(item.valid ? item.name : item.error)}</td></tr>`).join("");
+        } catch (err) {
+          console.error(err);
+          summary.className = "px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-black";
+          summary.innerText = "Gagal";
+          tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-rose-600 font-bold">${escapeHtml(err.message)}</td></tr>`;
+        } finally {
+          btn.disabled = false; btn.innerHTML = `<i class="fas fa-vial"></i><span class="hidden sm:inline">Test Folder</span>`;
+        }
+      };
+
+      buildFixedFolderInputs();
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { window.location.href = "index.html"; return; }
+        currentUserEmail = user.email || "";
+        document.getElementById("userEmail").innerText = currentUserEmail;
+        document.getElementById("logoutBtn").onclick = () => signOut(auth);
+        const userProfile = await getUserProfile(user);
+        if (!userProfile.active) {
+          alert("Akun Anda sedang nonaktif. Hubungi administrator.");
+          await signOut(auth);
+          window.location.href = "index.html";
+          return;
+        }
+        currentUserRole = userProfile.role;
+        document.getElementById("userRole").innerText = currentUserRole.toUpperCase();
+        if (currentUserRole === "admin") document.getElementById("adminMenu").classList.remove("hidden");
+        if (currentUserRole !== "admin") {
+          alert("Akses ditolak. Halaman setup hanya untuk admin.");
+          window.location.href = "dashboard.html";
+          return;
+        }
+        await loadExistingSetup();
+      });
+    </script>
+  </body>
+</html>

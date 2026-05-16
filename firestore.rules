@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Keep this aligned with the fallback admin email used in dashboard.html/users.html.
+    // After you create /users/{uid} with role "admin", you can remove this bootstrap email.
+    function isBootstrapAdmin() {
+      return signedIn() && request.auth.token.email == "admin@gmail.com";
+    }
+
+    function hasUserProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin()
+        || (
+          hasUserProfile()
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"
+        );
+    }
+
+    function isContractor() {
+      return hasUserProfile()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "contractor";
+    }
+
+    function isStaff() {
+      return isAdmin() || isContractor();
+    }
+
+    match /users/{userId} {
+      // Admin can list/manage all users.
+      // Normal users can read only their own profile, including the current email-query flow.
+      allow read: if isAdmin()
+        || (signedIn() && userId == request.auth.uid)
+        || (signedIn() && resource.data.email == request.auth.token.email);
+
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /projects/{projectId} {
+      allow read: if signedIn();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /project_docs/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+
+    match /project_settings/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Optional compatibility for a deployed dashboard that has a separate project setup collection.
+    match /project_setup/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if signedIn();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
