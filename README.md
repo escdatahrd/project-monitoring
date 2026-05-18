@@ -314,5 +314,4 @@ Role yang tersedia:
 
 - User biasa hanya membutuhkan link dashboard dan akun login.
 - Node.js, npm, dan Firebase CLI hanya dibutuhkan di device teknis untuk deploy.
-- Klien boleh menamai Firebase project sesuai nama proyek yang sedang dikerjakan.
-- Untuk kebutuhan audit, setiap proyek sebaiknya punya Firebase project, database, Hosting URL, Apps Script, dan Drive folder masing-masing.
+- User boleh menamai Firebase project sesuai nama proyek yang sedang dikerjakan.
